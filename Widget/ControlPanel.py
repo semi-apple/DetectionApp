@@ -1,40 +1,38 @@
 import csv
-from PyQt5.QtWidgets import QMainWindow, QPushButton, QVBoxLayout, QWidget, QLineEdit, QLabel, QHBoxLayout
+from PyQt5.QtWidgets import QPushButton, QVBoxLayout, QWidget, QLineEdit, QLabel, QHBoxLayout
 from PyQt5.QtWidgets import QApplication
 
 
-class ControlPanel(QMainWindow):
+class ControlPanel(QWidget):
     def __init__(self):
         super().__init__()
 
         # Serial Number
         self.serial_number_input = QLineEdit(self)
-        self.serial_number_input.setPlaceholderText('Inter serial number')
+        self.serial_number_input.setPlaceholderText('Enter serial number')
 
         # Device Model
         self.device_model_input = QLineEdit(self)
-        self.device_model_input.setPlaceholderText('Inter device model')
+        self.device_model_input.setPlaceholderText('Enter device model')
 
-        # other metadata
-
+        # Save Button
         self.save_button = QPushButton('Save', self)
         self.initUI()
 
     def initUI(self):
         self.setWindowTitle('Control Panel')
         self.setGeometry(100, 100, 300, 200)
-        layout = QVBoxLayout()
+        layout = QVBoxLayout(self)  # Layout directly set to self, the QWidget
 
-        # set input line
+        # Adding input lines
         self.add_input_line('Serial Number: ', self.serial_number_input, layout)
         self.add_input_line('Device Model: ', self.device_model_input, layout)
 
+        # Connect the button to on_click method
         self.save_button.clicked.connect(self.on_click)
         layout.addWidget(self.save_button)
 
-        container = QWidget()
-        container.setLayout(layout)
-        self.setCentralWidget(container)
+        self.show()
 
     def add_input_line(self, label_name, input_widget, layout):
         input_layout = QHBoxLayout()
@@ -44,11 +42,11 @@ class ControlPanel(QMainWindow):
         layout.addLayout(input_layout)
 
     def on_click(self):
-        dataset_file = '../Dataset/dataset.csv'
+        dataset_file = 'Dataset/dataset.csv'
         serial_number = self.serial_number_input.text()
         device_model = self.device_model_input.text()
 
-        # add information into dataset
+        # Add information into dataset
         with open(dataset_file, 'a', newline='', encoding='utf-8') as dataset:
             writer = csv.writer(dataset)
             writer.writerow([serial_number, device_model])
@@ -56,13 +54,8 @@ class ControlPanel(QMainWindow):
         self.clear_all_inputs()
 
     def clear_all_inputs(self):
-        layout = self.centralWidget().layout()
-
-        for i in range(layout.count()):
-            widget = layout.itemAt(i).widget()
-
-            if isinstance(widget, QLineEdit):
-                widget.clear()
+        self.serial_number_input.clear()
+        self.device_model_input.clear()
 
 
 if __name__ == '__main__':
