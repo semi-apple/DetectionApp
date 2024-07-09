@@ -4,9 +4,11 @@ Description: create a window widget to present camera information.
 Author: Kun
 Last Modified: 03 Jul 2024
 """
+import os
 
+import cv2
 from PyQt5.QtWidgets import QWidget, QLabel, QPushButton, QApplication, QGridLayout
-from ultralytics import YOLO
+import easyocr
 from Widget.VideoThread import *
 from IO.ImageSaver import *
 
@@ -14,10 +16,15 @@ from IO.ImageSaver import *
 class VideoWindow(QWidget):
     def __init__(self):
         super().__init__()
-        self.model = YOLO("./models/best.pt")
+        self.model = YOLO("./models/detect.pt")
         self.threads = []
         self.labels = []
         self.image_saver = ImageSaver()
+        logo_model_path = os.path.join(os.getcwd(), 'models/logo.pt')
+        ocr_model_path = os.path.join(os.getcwd(), 'models/ocr.pt')
+        self.logo_model = YOLO(logo_model_path)
+        self.ocr_model = YOLO(ocr_model_path)
+        self.reader = easyocr.Reader(['en'], gpu=False)
         self.initUI()
 
     def initUI(self):
@@ -114,22 +121,55 @@ class VideoWindow(QWidget):
             self.threads.append(thread)
 
     def capture_images(self):
-        imgs = []
-        detections = []
+        original_imgs = []
+        detected_imgs = []
+
+        # set default logo capture camera as 0
+        for thread in self.threads:
+            if thread.running:
+                original_img = thread.capture()  # original image
+                original_imgs.append(original_img)
+                # if thread.camera_port == 0 and original_img is not None:  # detect logo and serial number
+                #     logo, ser = self.detect_logo_serial(original_img, self.logo_model, self.ocr_model, self.reader)
+                #     print(f'logo: {logo}, ser: {ser}')
+                #     # if ser == '':
+                #     #     raise Exception('error')
+
+                ser = '000'
+                detected_img = thread.detect(original_img)  # image contains damaged information
+                detected_imgs.append(detected_img)
+
+        self.save_info(ser, ser, original_imgs)
+        cvfoler = ser + '_cv'
+        self.save_info(cvfoler, ser, detected_imgs)
+
+    def detect_logo_serial(self, original_img, logo_model, ocr_model, reader):
         logo = ''
         ser = ''
-        # set default logo capture camera as 0
-        for i, thread in enumerate(self.threads):
-            if thread.running:
-                img = thread.capture()  # original image
-                imgs.append(img)
-                if i == 0 and img is not None:  # detect logo and serial number
-                    # logo_model = YOLO('logo.pt')
-                    # logo, ser = logo_model(img)
-                    print('camera 0 is activated')
-                detected_img = thread.detect(img)  # image contains damaged information
-                detections.append(detected_img)
-        self.save_info(ser, imgs)
+
+        max_conf = -1
+        # detect logo
+        logo_results = logo_model(original_img)
+        for i, box in enumerate(logo_results[0].boxes):
+            if box.conf > max_conf:
+                max_conf = box.conf
+                logo = logo_model.names[int(box.cls)]
+        # detect serial number
+        ser_results = ocr_model(original_img)
+        xyxy = ser_results[0].boxes.xyxy[0].tolist()
+        x1, y1, x2, y2 = map(int, xyxy)
+
+        ser_region = original_img[y1:y2, x1:x2]
+        gray_region = cv.cvtColor(ser_region, cv.COLOR_BGR2GRAY)
+        _, ser_region_thresh = cv.threshold(gray_region, 180, 255, cv.THRESH_BINARY_INV)
+        cv.imshow('thresh', ser_region_thresh)
+        cv.waitKey()
+        cv.destroyAllWindows()
+        ser_detections = reader.readtext(ser_region_thresh, allowlist='0123456789')
+        for detection in ser_detections:
+            ser += detection[1]
+
+        return logo, ser
 
     def stop_detection(self):
         for thread in self.threads:
@@ -162,8 +202,8 @@ class VideoWindow(QWidget):
     def set_image6(self, image):
         self.image_label4.setPixmap(QPixmap.fromImage(image).scaled(self.image_label4.size(), Qt.KeepAspectRatio))
 
-    def save_info(self, ser, imgs):
-        self.image_saver.save(ser, imgs)
+    def save_info(self, foler_name, ser, imgs):
+        self.image_saver.save(folder_name=foler_name, ser=ser, imgs=imgs)
 
     def closeEvent(self, event):
         self.stop_detection()

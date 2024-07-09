@@ -16,6 +16,8 @@ scratches on random notebooks using image processing and machine learning techni
 
 ## Directory Structure
 
+
+
 ### App
 Contains the main application logic, including the user interface and core functionality.
 
@@ -39,6 +41,22 @@ Sample images used in the project for testing and demonstration purposes.
 1. Clone the repository:
    ```bash
    git clone https://github.com/semi-apple/DetectionApp.git
+   ```
+   
+## Usage
+To run the main application, use the following command:
+```bash
+python main.py
+```
+
+## Contributing
+If you would like to contribute to this project, please follow these steps:
+
+Fork the repository.
+Create a new branch: ```git checkout -b my-feature-branch.```
+Make your changes and commit them: ```git commit -m 'Add some feature'```.
+Push to the branch: ```git push origin my-feature-branch```.
+Submit a ```pull``` request.
 
 ## Contact
 
