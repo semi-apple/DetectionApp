@@ -53,10 +53,29 @@ def detect_objects_on_frame(frame, model):
     return output
 
 
-def show_frame_with_detections(frame, detections):
+def show_frame_with_detections(original_frame, detections):
+    frame = original_frame.copy()
     for det in detections:
         x1, y1, x2, y2, class_name, prob, length = det
         cv.rectangle(frame, (int(x1), int(y1)), (int(x2), int(y2)), (0, 255, 0), 2)
         label = f"{class_name}: {prob * 100:.2f}% Length: {length}"
         cv.putText(frame, label, (int(x1), int(y1) - 10), cv.FONT_HERSHEY_SIMPLEX, 1.0, (0, 255, 0), 3)
+
     # cv.imshow('Real-time Detections', frame)
+    # cv.waitKey(0)
+    # cv.imshow('original', original_frame)
+    # cv.waitKey(0)
+    # cv.destroyAllWindows()
+
+    return frame
+
+
+if __name__ == "__main__":
+    original_frame = np.zeros((480, 640, 3), dtype=np.uint8)
+
+    detections = [
+        (100, 100, 200, 200, "ObjectA", 0.95, 100),
+        (300, 150, 400, 300, "ObjectB", 0.80, 150)
+    ]
+
+    show_frame_with_detections(original_frame, detections)

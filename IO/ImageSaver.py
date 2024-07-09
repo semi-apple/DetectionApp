@@ -19,9 +19,8 @@ class ImageSaver:
         if not os.path.exists(self.save_directory):
             os.makedirs(self.save_directory)
 
-    @pyqtSlot(QImage)
-    def save(self, ser, imgs):
-        save_directory = os.path.join(self.save_directory, ser)
+    def save(self, folder_name, ser, imgs):
+        save_directory = os.path.join(self.save_directory, folder_name)
         if not os.path.exists(save_directory):
             os.makedirs(save_directory)
 

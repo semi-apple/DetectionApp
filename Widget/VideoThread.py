@@ -54,8 +54,7 @@ class VideoThread(QThread):
         if img is None:
             return
         detections = detect_objects_on_frame(img, self.model)
-        show_frame_with_detections(img, detections)
-        return img
+        return show_frame_with_detections(img, detections)
 
     # def run(self):
     #     cap = cv.VideoCapture(self.camera_port)
@@ -84,3 +83,15 @@ def update_image(cv_img, label):
     p = convert_to_Qt_format.scaled(640, 480, aspectRatioMode=Qt.IgnoreAspectRatio)
     pixmap = QPixmap.fromImage(p)
     label.setPixmap(pixmap)
+
+
+if __name__ == '__main__':
+    model = YOLO('models/detect.pt')
+    img_path = '/Users/kunzhou/Desktop/train/dataset/train/images/IMG_3185.jpeg'
+    img = cv.imread(img_path)
+    thread = VideoThread(model=model)
+    detected_img = thread.detect(img)
+    cv.imshow('detection', detected_img)
+    cv.waitKey()
+    cv.destroyAllWindows()
+
