@@ -5,6 +5,7 @@ Author: Kun
 Last Modified: 03 Jul 2024
 """
 import os
+_Widget_dir = os.path.dirname(os.path.abspath(__file__))
 
 import cv2
 from PyQt5.QtWidgets import QWidget, QLabel, QPushButton, QApplication, QGridLayout
@@ -16,12 +17,13 @@ from IO.ImageSaver import *
 class VideoWindow(QWidget):
     def __init__(self):
         super().__init__()
-        self.model = YOLO("./models/detect.pt")
+        detect_model = os.path.join(_Widget_dir, 'models/detect.pt')
+        self.model = YOLO(detect_model)
         self.threads = []
         self.labels = []
         self.image_saver = ImageSaver()
-        logo_model_path = os.path.join(os.getcwd(), 'models/logo.pt')
-        ocr_model_path = os.path.join(os.getcwd(), 'models/ocr.pt')
+        logo_model_path = os.path.join(_Widget_dir, 'models/logo.pt')
+        ocr_model_path = os.path.join(_Widget_dir, 'models/ocr.pt')
         self.logo_model = YOLO(logo_model_path)
         self.ocr_model = YOLO(ocr_model_path)
         self.reader = easyocr.Reader(['en'], gpu=False)
@@ -129,13 +131,13 @@ class VideoWindow(QWidget):
             if thread.running:
                 original_img = thread.capture()  # original image
                 original_imgs.append(original_img)
-                # if thread.camera_port == 0 and original_img is not None:  # detect logo and serial number
-                #     logo, ser = self.detect_logo_serial(original_img, self.logo_model, self.ocr_model, self.reader)
-                #     print(f'logo: {logo}, ser: {ser}')
-                #     # if ser == '':
-                #     #     raise Exception('error')
+                if thread.camera_port == 0 and original_img is not None:  # detect logo and serial number
+                    logo, ser = self.detect_logo_serial(original_img, self.logo_model, self.ocr_model, self.reader)
+                    print(f'logo: {logo}, ser: {ser}')
+                    if ser == '':
+                        raise Exception('error')
 
-                ser = '000'
+                # ser = '000'
                 detected_img = thread.detect(original_img)  # image contains damaged information
                 detected_imgs.append(detected_img)
 

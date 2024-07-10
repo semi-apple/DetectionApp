@@ -1,3 +1,23 @@
+"""
+Login Window for Detection Application
+
+This script provides a login window using PyQt5, allowing users to enter their username and password.
+Upon successful login, the main Detection Application window is opened. This is part of the larger
+Detection Application project.
+
+Classes:
+- LoginWindow: A QWidget-based class that creates the login interface.
+
+Functions:
+- initUI(): Initializes the user interface with input fields and login button.
+- handleLogin(): Handles the login button click event to validate user credentials.
+- open_main_window(): Opens the main Detection Application window upon successful login.
+
+
+Author: Kun
+Last Modified: 10 Jul 2024
+"""
+
 from PyQt5.QtWidgets import QMessageBox
 from App.DetectionApp import *
 

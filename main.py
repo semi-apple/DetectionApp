@@ -6,7 +6,6 @@ Last Modified: 03 Jul 2024
 """
 from Widget.LogInWindow import *
 
-#
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     login = LoginWindow(app)
