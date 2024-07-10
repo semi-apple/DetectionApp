@@ -16,8 +16,6 @@ scratches on random notebooks using image processing and machine learning techni
 
 ## Directory Structure
 
-
-
 ### App
 Contains the main application logic, including the user interface and core functionality.
 
@@ -37,17 +35,28 @@ Components and widgets used in the application interface.
 Sample images used in the project for testing and demonstration purposes.
 
 ## Installation
+Caution: You may need to run the code on pycharm since there might be some library dependency problem.
 
 1. Clone the repository:
    ```bash
    git clone https://github.com/semi-apple/DetectionApp.git
    ```
    
+2. Install libraries:
+   ```bash
+   pip install numpy
+   pip install plantcv
+   pip install opencv-python
+   pip install pyqt5
+   pip install ultralytics
+   pip install easyocr
+   ```
+   
 ## Usage
 To run the main application, use the following command:
-```bash
-python main.py
-```
+  ```bash
+  python main.py
+  ```
 
 ## Contributing
 If you would like to contribute to this project, please follow these steps:

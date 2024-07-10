@@ -6,8 +6,6 @@ Last Modified: 03 Jul 2024
 """
 import os
 import cv2 as cv
-from PyQt5.QtCore import pyqtSlot
-from PyQt5.QtGui import QImage
 
 TRANSFER = {0: 'top', 1: 'bottom', 2: 'left', 3: 'right', 4: 'screen', 5: 'keyboard'}
 
