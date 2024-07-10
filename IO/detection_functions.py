@@ -1,3 +1,18 @@
+"""
+This script provides functionality for detecting objects and calculating the length of scratches
+in images using OpenCV, PIL, and PlantCV libraries. It includes methods to perform edge detection,
+measure the length of detected scratches, and visualize the detection results on frames.
+
+Functions:
+- scratch_len(img_cv, location): Calculate the length of scratches in a given image region.
+- detected_edges(img_cv): Perform edge detection on an image.
+- detect_objects_on_frame(frame, model): Detect objects on a given frame using a specified model.
+- show_frame_with_detections(original_frame, detections): Visualize detected objects and their lengths on a frame.
+
+Author: Kun
+Last Modified: 10 Jul 2024
+"""
+
 from PIL import Image
 from plantcv import plantcv as pcv
 import cv2 as cv

@@ -87,7 +87,7 @@ def update_image(cv_img, label):
 
 if __name__ == '__main__':
     model = YOLO('models/detect.pt')
-    img_path = '/Users/kunzhou/Desktop/train/dataset/train/images/IMG_3185.jpeg'
+    img_path = '/Users/kunzhou/Desktop/DetectionApp/Widget/image016.jpg'
     img = cv.imread(img_path)
     thread = VideoThread(model=model)
     detected_img = thread.detect(img)
