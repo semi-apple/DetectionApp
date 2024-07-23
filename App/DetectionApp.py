@@ -15,38 +15,45 @@ Functions:
 Author: Kun
 Last Modified: 10 Jul 2024
 """
-
-from Widget.VideoWindow import *
-from Widget.ControlPanel import *
-from PyQt5.QtWidgets import QApplication, QAction, QMainWindow
+from Widget.LogInWindow import LoginWindow
+from Widget.VideoWindow import VideoWindow
+from Widget.ControlPanel import ControlPanel
+from Widget.MenuBar import MenuBar
+from PyQt5.QtWidgets import QApplication, QMainWindow
 from PyQt5.QtCore import QRect
 import sys
 
 
+def applicationSupportsSecureRestorableState_():
+    return True
+
+
 class DetectionApp(QMainWindow):
-    def __init__(self, master):
-        super().__init__()
+    def __init__(self, parent=None):
+        super(DetectionApp, self).__init__(parent)
         self.video_window = None
         self.control_panel = None
-        self.app = master
+        self.login = LoginWindow()
+        self.username = ''
+        self.user_level = -1
+        self.login.accepted.connect(self.setup_windows)
         self.initUI()
+        # self.login.show()
 
     def initUI(self):
         self.setWindowTitle('Application Manager')
+        self.menu_bar = MenuBar(self)
+        self.setMenuBar(self.menu_bar)
+        self.login.show()
         self.hide()
-        menu_bar = self.menuBar()
-        file_menu = menu_bar.addMenu('File')
-        exit_action = QAction('Exit', self)
-        exit_action.triggered.connect(self.app.quit)
-        file_menu.addAction(exit_action)
-        self.setup_windows()
 
-    def setup_windows(self):
-        screens = self.app.screens()
-        # print(len(screens))
+    def setup_windows(self, username, user_level):
+        self.username, self.user_level = username, user_level
+        print(username, user_level)
+        screens = app.screens()
 
-        self.video_window = VideoWindow()
-        self.control_panel = ControlPanel()
+        self.video_window = VideoWindow(self)
+        self.control_panel = ControlPanel(self)
 
         if len(screens) > 1:
             self.video_window.setGeometry(screens[0].geometry())
@@ -61,9 +68,13 @@ class DetectionApp(QMainWindow):
         # control_geometry = QRect(900, 100, 300, 200)
         # self.video_window.setGeometry(video_geometry)
         # self.control_panel.setGeometry(control_geometry)
+        # self.hide()
+        self.video_window.show()
+        self.control_panel.show()
 
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    detection = DetectionApp(app)
+    detection = DetectionApp()
+    # detection.login.show()
     sys.exit(app.exec_())

@@ -50,11 +50,12 @@ class VideoThread(QThread):
         cap.release()
         return None
 
-    def detect(self, img):
+    def detect_frame(self, img):
         if img is None:
             return
-        detections = detect_objects_on_frame(img, self.model)
-        return show_frame_with_detections(img, detections)
+        # detections = detect_objects_on_frame(img, self.model)
+        # return show_frame_with_detections(img, detections)
+        return segment_defect(self.model, img)
 
     # def run(self):
     #     cap = cv.VideoCapture(self.camera_port)
@@ -86,12 +87,14 @@ def update_image(cv_img, label):
 
 
 if __name__ == '__main__':
-    model = YOLO('models/detect.pt')
-    img_path = '/Users/kunzhou/Desktop/DetectionApp/Widget/image016.jpg'
+    # model = YOLO('yolov8s-seg.yaml').load('models/segment.pt')
+    # model = YOLO('models/logo.pt')
+    model = YOLO('models/segment.pt')
+    img_path = '/Users/kunzhou/Desktop/DetectionApp/images/new/image019.jpg'
     img = cv.imread(img_path)
     thread = VideoThread(model=model)
-    detected_img = thread.detect(img)
+    detected_img = thread.detect_frame(img)
     cv.imshow('detection', detected_img)
     cv.waitKey()
-    cv.destroyAllWindows()
+    # cv.destroyAllWindows()
 

@@ -18,16 +18,23 @@ Author: Kun
 Last Modified: 10 Jul 2024
 """
 import os
+
+from PyQt5 import QtGui
+
 _Widget_dir = os.path.dirname(os.path.abspath(__file__))
 
 import csv
-from PyQt5.QtWidgets import QPushButton, QVBoxLayout, QWidget, QLineEdit, QLabel, QHBoxLayout
+from PyQt5.QtWidgets import QPushButton, QVBoxLayout, QLineEdit, QLabel, QHBoxLayout, QMainWindow, QWidget
 from PyQt5.QtWidgets import QApplication
+from Widget.MenuBar import PanelMenuBar
 
 
-class ControlPanel(QWidget):
-    def __init__(self):
-        super().__init__()
+class ControlPanel(QMainWindow):
+    def __init__(self, parent=None):
+        super(ControlPanel, self).__init__(parent)
+
+        self.menu_bar = PanelMenuBar(self)
+        self.setMenuBar(self.menu_bar)
 
         # Serial Number
         self.serial_number_input = QLineEdit(self)
@@ -44,7 +51,11 @@ class ControlPanel(QWidget):
     def initUI(self):
         self.setWindowTitle('Control Panel')
         self.setGeometry(100, 100, 300, 200)
-        layout = QVBoxLayout(self)  # Layout directly set to self, the QWidget
+
+        central_widget = QWidget(self)
+        self.setCentralWidget(central_widget)
+
+        layout = QVBoxLayout(central_widget)  # Layout directly set to self, the QWidget
 
         # Adding input lines
         self.add_input_line('Serial Number: ', self.serial_number_input, layout)
@@ -53,6 +64,7 @@ class ControlPanel(QWidget):
         # Connect the button to on_click method
         self.save_button.clicked.connect(self.on_click)
         layout.addWidget(self.save_button)
+        # self.setLayout(layout)
 
         self.show()
 

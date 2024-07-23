@@ -17,6 +17,7 @@ from PIL import Image
 from plantcv import plantcv as pcv
 import cv2 as cv
 import numpy as np
+import random
 
 
 def scratch_len(img_cv, location):
@@ -83,6 +84,41 @@ def show_frame_with_detections(original_frame, detections):
     # cv.destroyAllWindows()
 
     return frame
+
+
+def segment_defect(model, img):
+    try:
+        classes = list(model.names.values())
+        classes_ids = [classes.index(cls) for cls in classes]
+
+        conf = 0.2
+
+        results = model.predict(img, conf=conf)
+        colors = [random.choices(range(256), k=3) for _ in classes_ids]
+        print("Results:", results)
+
+        for result in results:
+            for mask, box in zip(result.masks.xy, result.boxes):
+                print(f"Mask: {mask}")
+                print(f"Mask shape: {mask.shape}")
+
+                if mask.size == 0 or len(mask.shape) != 2 or mask.shape[1] != 2:
+                    print("Error: Mask points do not have the correct shape")
+                    continue
+
+                points = np.int32(mask)
+                print(f"Points: {points}")
+                print(f"Points shape: {points.shape}")
+
+                color_number = classes_ids.index(int(box.cls[0]))
+                cv.fillPoly(img, [points], colors[color_number])
+
+        cv.imshow('Image', img)
+        cv.waitKey()
+        return img
+
+    except Exception as e:
+        print(f"Error during segmentation: {e}")
 
 
 if __name__ == "__main__":

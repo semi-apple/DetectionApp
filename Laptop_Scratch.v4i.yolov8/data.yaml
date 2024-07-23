@@ -1,0 +1,13 @@
+train: ../train/images
+val: ../valid/images
+test: ../test/images
+
+nc: 2
+names: ['scratch', 'stain']
+
+roboflow:
+  workspace: zkunnov-jshpo
+  project: laptop_scratch
+  version: 4
+  license: CC BY 4.0
+  url: https://universe.roboflow.com/zkunnov-jshpo/laptop_scratch/dataset/4
