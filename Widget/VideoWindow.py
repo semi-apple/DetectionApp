@@ -8,32 +8,41 @@ import os
 _Widget_dir = os.path.dirname(os.path.abspath(__file__))
 
 import cv2
-from PyQt5.QtWidgets import QWidget, QLabel, QPushButton, QApplication, QGridLayout
+from PyQt5.QtWidgets import QLabel, QPushButton, QApplication, QGridLayout, QMainWindow, QWidget
 import easyocr
 from Widget.VideoThread import *
 from IO.ImageSaver import *
+from Widget.MenuBar import VideoMenuBar
 
 
-class VideoWindow(QWidget):
-    def __init__(self):
-        super().__init__()
-        detect_model = os.path.join(_Widget_dir, 'models/detect.pt')
+class VideoWindow(QMainWindow):
+    def __init__(self, parent=None):
+        super(VideoWindow, self).__init__()
+        detect_model = os.path.join(_Widget_dir, 'models/segment.pt')
         self.model = YOLO(detect_model)
         self.threads = []
         self.labels = []
+        self.menu_bar = VideoMenuBar(self)
+        self.setMenuBar(self.menu_bar)
+        self.initModel()
+        self.initUI()
+
+    def initModel(self):
         self.image_saver = ImageSaver()
         logo_model_path = os.path.join(_Widget_dir, 'models/logo.pt')
         ocr_model_path = os.path.join(_Widget_dir, 'models/ocr.pt')
         self.logo_model = YOLO(logo_model_path)
         self.ocr_model = YOLO(ocr_model_path)
         self.reader = easyocr.Reader(['en'], gpu=False)
-        self.initUI()
 
     def initUI(self):
         self.setWindowTitle('Video Stream')
         self.setGeometry(100, 100, 800, 600)
 
-        grid_layout = QGridLayout(self)
+        central_widget = QWidget(self)
+        self.setCentralWidget(central_widget)
+
+        grid_layout = QGridLayout(central_widget)
 
         self.image_label1 = QLabel(self)
         self.image_label1.setAlignment(Qt.AlignCenter)

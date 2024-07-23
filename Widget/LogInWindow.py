@@ -17,15 +17,21 @@ Functions:
 Author: Kun
 Last Modified: 10 Jul 2024
 """
+import sys
 
-from PyQt5.QtWidgets import QMessageBox
-from App.DetectionApp import *
+from PyQt5.QtCore import pyqtSignal
+from PyQt5.QtWidgets import QMessageBox, QLabel, QLineEdit, QPushButton, QVBoxLayout, QApplication, QDialog
+from Exceptions.UserLoginException import UserNotFoundException, IncorrectPasswordException
+
+USERS = {'Admin': {'password': '123456', 'level': 0}, }
 
 
-class LoginWindow(QWidget):
-    def __init__(self, master):
-        super().__init__()
-        self.app = master
+class LoginWindow(QDialog):
+    accepted = pyqtSignal(str, int)
+    rejected = pyqtSignal()
+
+    def __init__(self, parent=None):
+        super(LoginWindow, self).__init__(parent)
         self.initUI()
 
     def initUI(self):
@@ -54,21 +60,35 @@ class LoginWindow(QWidget):
 
     def handleLogin(self):
         # Placeholder functionality for login
-        # if self.text_username.text() == 'admin' and self.text_password.text() == 'admin':
-        if self.text_username.text() == '' and self.text_password.text() == '':
-            QMessageBox.information(self, 'Login', 'Successful login!')
-            self.open_main_window()
-        else:
-            QMessageBox.warning(self, 'Login', 'Incorrect username or password.')
-
-    def open_main_window(self):
-        self.app = DetectionApp(self.app)
-        # self.app.show()
+        # try:
+        #     username, user_level = self.getUserInfo()
+        #     QMessageBox.information(self, 'Login Successful!', f'Welcome, {username}!')
+        #     self.accepted.emit(username, user_level)
+        #     self.close()
+        #
+        # except Exception as e:
+        #     return
+        self.accepted.emit('haha', 1)
         self.close()
+
+    def getUserInfo(self):
+        username = self.text_username.text()
+        password = self.text_password.text()
+        try:
+            if username not in USERS:
+                raise UserNotFoundException(username)
+
+            if USERS[username]['password'] != password:
+                raise IncorrectPasswordException(username)
+
+            return username, USERS[username]['level']
+
+        except Exception as e:
+            QMessageBox.warning(self, 'Login', str(e))
 
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    login_window = LoginWindow(app)
+    login_window = LoginWindow()
     login_window.show()
     sys.exit(app.exec_())
