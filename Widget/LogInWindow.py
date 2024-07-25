@@ -55,7 +55,7 @@ class LoginWindow(QDialog):
         layout.addWidget(self.button_login)
 
         self.setLayout(layout)
-        self.setWindowTitle('Login Form')
+        self.setWindowTitle('Greenbox Computer Vision (GVS)')
         self.resize(300, 120)
 
     def handleLogin(self):

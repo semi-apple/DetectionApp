@@ -17,7 +17,7 @@ from Widget.MenuBar import VideoMenuBar
 
 class VideoWindow(QMainWindow):
     def __init__(self, parent=None):
-        super(VideoWindow, self).__init__()
+        super(VideoWindow, self).__init__(parent)
         detect_model = os.path.join(_Widget_dir, 'models/segment.pt')
         self.model = YOLO(detect_model)
         self.threads = []
