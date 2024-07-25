@@ -18,7 +18,7 @@ Last Modified: 10 Jul 2024
 from Widget.LogInWindow import LoginWindow
 from Widget.VideoWindow import VideoWindow
 from Widget.ControlPanel import ControlPanel
-from Widget.MenuBar import MenuBar
+from Widget.MenuBar import *
 from PyQt5.QtWidgets import QApplication, QMainWindow
 from PyQt5.QtCore import QRect
 import sys
@@ -42,7 +42,7 @@ class DetectionApp(QMainWindow):
 
     def initUI(self):
         self.setWindowTitle('Application Manager')
-        self.menu_bar = MenuBar(self)
+        self.menu_bar = BarBase(self)
         self.setMenuBar(self.menu_bar)
         self.login.show()
         self.hide()

@@ -28,17 +28,49 @@ class BarBase(QMenuBar):
         self.setNativeMenuBar(False)
 
     def initUI(self):
+        # ---------------- File --------------- #
         file_menu = self.addMenu('File')
 
-        add_action = QAction('Add', self)
-        add_action.triggered.connect(self.add_file)
-        file_menu.addAction(add_action)
+        open_folder_action = QAction('Open', self)
+        open_folder_action.triggered.connect(self.open_folder)
+        file_menu.addAction(open_folder_action)
 
         exit_action = QAction('Exit', self)
         exit_action.triggered.connect(self.destroy_app)
         file_menu.addAction(exit_action)
 
+        # -------------- Database ------------- #
+        database_menu = self.addMenu('Database')
+
+        open_database_action = QAction('Open', self)
+        open_database_action.triggered.connect(self.open_database)
+        database_menu.addAction(open_database_action)
+
+        export_data_action = QAction('Export', self)
+        export_data_action.triggered.connect(self.export_data)
+        database_menu.addAction(export_data_action)
+
+        # -------------- Account -------------- #
+        account_menu = self.addMenu('Account')
+
+        acc_profile_action = QAction('Profile', self)
+        acc_profile_action.triggered.connect(self.acc_profile)
+        account_menu.addAction(acc_profile_action)
+
+        signout_action = QAction('Sign out', self)
+        signout_action.triggered.connect(self.sign_out)
+        account_menu.addAction(signout_action)
+
+        # --------------- Help ---------------- #
         help_menu = self.addMenu('Help')
+
+        instruction_action = QAction('Instruction', self)
+        instruction_action.triggered.connect(self.open_instruction)
+        help_menu.addAction(instruction_action)
+
+        documents_action = QAction('Documents', self)
+        documents_action.triggered.connect(self.open_documents)
+        help_menu.addAction(documents_action)
 
 
     @pyqtSlot()
@@ -46,7 +78,31 @@ class BarBase(QMenuBar):
         QApplication.instance().quit()
 
     @pyqtSlot()
-    def add_file(self):
+    def open_folder(self):
+        pass
+
+    @pyqtSlot()
+    def open_database(self):
+        pass
+
+    @pyqtSlot()
+    def export_data(self):
+        pass
+
+    @pyqtSlot()
+    def acc_profile(self):
+        pass
+
+    @pyqtSlot()
+    def sign_out(self):
+        pass
+
+    @pyqtSlot()
+    def open_instruction(self):
+        pass
+
+    @pyqtSlot()
+    def open_documents(self):
         pass
 
 
