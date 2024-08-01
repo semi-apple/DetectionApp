@@ -4,9 +4,16 @@ Description: Program entrance, load application
 Author: Kun
 Last Modified: 03 Jul 2024
 """
-from App.WindowController import *
+import sys
+
+from PyQt5.QtWidgets import QApplication
+
+from App.DetectionApp import DetectionApp
+from Widgets.Login import LoginWindow
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    controller = WindowController()
+    login = LoginWindow()
+    detect_app = DetectionApp()
+    login.accepted.connect(lambda username, level: detect_app.start_detection(username, level))
     sys.exit(app.exec_())

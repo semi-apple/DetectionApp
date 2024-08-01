@@ -15,66 +15,52 @@ Functions:
 Author: Kun
 Last Modified: 10 Jul 2024
 """
-from Widget.LogInWindow import LoginWindow
-from Widget.VideoWindow import VideoWindow
-from Widget.ControlPanel import ControlPanel
-from Widget.MenuBar import *
-from PyQt5.QtWidgets import QApplication, QMainWindow
-from PyQt5.QtCore import QRect
+import os
+_APP_DIR = os.path.dirname(os.path.abspath(__file__))
+
+from UI import *
+from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel
+from PyQt5.QtWidgets import QLayout
+from PyQt5.QtCore import QRect, QCoreApplication
 import sys
 
+from IO.ImageSaver import *
+import easyocr
+from UI import *
+from ultralytics import YOLO
+from App.Controller import *
 
-def applicationSupportsSecureRestorableState_():
-    return True
+
+def get_app() -> QApplication | None:
+    return QApplication.instance()
 
 
 class DetectionApp(QMainWindow):
+    init_panel = pyqtSignal(list)
+
     def __init__(self, parent=None):
         super(DetectionApp, self).__init__(parent)
-        self.video_window = None
-        self.control_panel = None
-        self.login = LoginWindow()
-        self.username = ''
-        self.user_level = -1
-        self.login.accepted.connect(self.setup_windows)
-        self.initUI()
-        # self.login.show()
+        # uic.loadUi('../draft.ui', self)
+        self.ui = Ui_MainWindow()
+        self.ui.setupUi(self)
+        self.setGeometry(get_app().screens()[0].geometry())
+        self.controller = Controller(self.ui)
+        self.handle_signel()
 
-    def initUI(self):
-        self.setWindowTitle('Application Manager')
-        self.menu_bar = BarBase(self)
-        self.setMenuBar(self.menu_bar)
-        self.login.show()
-        self.hide()
+        self.init_panel.emit(self.findChildren(QLineEdit))
 
-    def setup_windows(self, username, user_level):
-        self.username, self.user_level = username, user_level
-        print(username, user_level)
-        screens = app.screens()
+    def handle_signel(self):
+        self.init_panel.connect(self.controller.init_panel_base)
 
-        self.video_window = VideoWindow(self)
-        self.control_panel = ControlPanel(self)
-
-        if len(screens) > 1:
-            self.video_window.setGeometry(screens[0].geometry())
-            self.control_panel.setGeometry(screens[1].geometry())
-        else:
-            video_geometry = QRect(100, 100, 800, 600)
-            control_geometry = QRect(900, 100, 300, 200)
-            self.video_window.setGeometry(video_geometry)
-            self.control_panel.setGeometry(control_geometry)
-
-        # video_geometry = QRect(100, 100, 800, 600)
-        # control_geometry = QRect(900, 100, 300, 200)
-        # self.video_window.setGeometry(video_geometry)
-        # self.control_panel.setGeometry(control_geometry)
-        # self.hide()
-        self.video_window.show()
-        self.control_panel.show()
+    def start_detection(self, username, level):
+        if username is not None and level is not None:
+            self.controller.username = username
+            self.controller.level = level
+            self.show()
 
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     detection = DetectionApp()
-    # detection.login.show()
+    detection.show()
     sys.exit(app.exec_())

@@ -33,6 +33,7 @@ class LoginWindow(QDialog):
     def __init__(self, parent=None):
         super(LoginWindow, self).__init__(parent)
         self.initUI()
+        self.show()
 
     def initUI(self):
         # Create label, input fields, and button
@@ -60,16 +61,16 @@ class LoginWindow(QDialog):
 
     def handleLogin(self):
         # Placeholder functionality for login
-        # try:
-        #     username, user_level = self.getUserInfo()
-        #     QMessageBox.information(self, 'Login Successful!', f'Welcome, {username}!')
-        #     self.accepted.emit(username, user_level)
-        #     self.close()
-        #
-        # except Exception as e:
-        #     return
-        self.accepted.emit('haha', 1)
-        self.close()
+        try:
+            username, user_level = self.getUserInfo()
+            QMessageBox.information(self, 'Login Successful!', f'Welcome, {username}!')
+            self.accepted.emit(username, user_level)
+            self.close()
+
+        except Exception as e:
+            return
+        # self.accepted.emit('haha', 1)
+        # self.close()
 
     def getUserInfo(self):
         username = self.text_username.text()

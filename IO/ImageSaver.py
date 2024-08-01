@@ -17,7 +17,7 @@ class ImageSaver:
         if not os.path.exists(self.save_directory):
             os.makedirs(self.save_directory)
 
-    def save(self, folder_name, ser, imgs):
+    def save(self, folder_name, lot, imgs):
         save_directory = os.path.join(self.save_directory, folder_name)
         if not os.path.exists(save_directory):
             os.makedirs(save_directory)
@@ -26,7 +26,7 @@ class ImageSaver:
         for i, image in enumerate(imgs):
             if image is None:
                 break
-            file_path = os.path.join(save_directory, f'{ser}_{TRANSFER[i]}.png')
+            file_path = os.path.join(save_directory, f'{lot}_{TRANSFER[i]}.png')
 
             # Save the image
             cv.imwrite(file_path, image)
@@ -35,8 +35,8 @@ class ImageSaver:
 
 if __name__ == '__main__':
     saver = ImageSaver()
-    ser = 'test001'
+    lot = 'test001'
     imgs = []
     img = cv.imread('../image001.jpg')
     imgs.append(img)
-    saver.save(ser, imgs)
+    saver.save(lot, lot, imgs)
