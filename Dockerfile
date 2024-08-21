@@ -1,21 +1,49 @@
 # syntax=docker/dockerfile:1
 
 # set base image to the 22.04 release of Ubuntu
-FROM ubuntu:22.04
-
-# install app dependencies
-RUN apt-get update && apt-get install -y python3 python3-pip
+FROM python:3.10
 
 # create work dir
 WORKDIR /app
 
+COPY requirements.txt .
+
+RUN pip install --upgrade pip setuptools wheel
+
+# install tools
+RUN echo "Tools installing..." && \
+    apt-get update && apt-get install -y \
+    xvfb \
+    libgl1 \
+    libxcb-xinerama0 \
+    libxkbcommon-x11-0 \
+    libxcb1 \
+    libx11-xcb1 \
+    libxcb-icccm4 \
+    libxcb-image0 \
+    libxcb-keysyms1 \
+    libxcb-render-util0 \
+    libxcb-shape0 \
+    libdbus-1-3 \
+    qt5-qmake \
+    qtbase5-dev && \
+    rm -rf /var/lib/apt/lists/*
+
+# Install python packages with pip
+RUN echo "(*) Installing python packages with pip..." && \
+    pip install --no-cache-dir -r requirements.txt
+
+
 # copy all code to work dir
 COPY . /app
 
-# Install python packages with pip
-RUN RUN echo "(*) Installing python packages with pip..." \
-    pip3 install --no-cache-dir -r requirements.txt
-
 EXPOSE 8000
 
-CMD ["python3", "main.py"]
+ENV QT_QPA_PLATFORM=xcb
+ENV QT_DEBUG_PLUGINS=1
+ENV QT_DEBUG_COMPONENT=1
+
+ENV DISPLAY=:99
+
+CMD Xvfb :99 -screen 0 1024x768x24 -ac +extension GLX +render -noreset & \
+    python Application/DetectionApp.py

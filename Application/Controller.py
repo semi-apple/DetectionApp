@@ -21,8 +21,8 @@ _APP_DIR = os.path.dirname(os.path.abspath(__file__))
 
 from Widgets.VideoBase import *
 from Widgets.ControlPanel import PanelBase
-from PyQt5.QtWidgets import QApplication, QLabel, QMainWindow, QLineEdit
-from PyQt5.QtCore import QRect, QCoreApplication, QObject, pyqtSlot
+from PyQt5.QtWidgets import QApplication, QMainWindow
+from PyQt5.QtCore import QCoreApplication, QObject, pyqtSlot
 from IO.ImageSaver import *
 import easyocr
 from UI import *

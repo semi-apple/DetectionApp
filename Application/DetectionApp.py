@@ -16,9 +16,12 @@ Author: Kun
 Last Modified: 10 Jul 2024
 """
 import os
+
+from PyQt5.QtWidgets import QLineEdit
+
 _APP_DIR = os.path.dirname(os.path.abspath(__file__))
 
-from App.Controller import *
+from Controller import *
 from typing import Optional
 
 
@@ -36,11 +39,11 @@ class DetectionApp(QMainWindow):
         self.ui.setupUi(self)
         self.setGeometry(get_app().screens()[0].geometry())
         self.controller = Controller(self.ui)
-        self.handle_signel()
+        self.handle_signal()
 
         self.init_panel.emit(self.findChildren(QLineEdit))
 
-    def handle_signel(self):
+    def handle_signal(self):
         self.init_panel.connect(self.controller.init_panel_base)
 
     def start_detection(self, username, level):
