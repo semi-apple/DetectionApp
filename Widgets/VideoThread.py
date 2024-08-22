@@ -5,10 +5,12 @@ Author: Kun
 Last Modified: 03 Jul 2024
 """
 from PyQt5.QtCore import pyqtSlot
-from IO.detection_functions import *
+# from IO.detection_functions import *
 from PyQt5.QtGui import QImage, QPixmap
 from PyQt5.QtCore import Qt, QThread, pyqtSignal
 from ultralytics import YOLO
+import cv2 as cv
+import numpy as np
 
 
 def convert_cv_qt(cv_img):
@@ -51,12 +53,12 @@ class VideoThread(QThread):
         cap.release()
         return None
 
-    def detect_frame(self, img):
-        if img is None:
-            return
-        # detections = detect_objects_on_frame(img, self.model)
-        # return show_frame_with_detections(img, detections)
-        return segment_defect_test(img)
+    # def detect_frame(self, img):
+    #     if img is None:
+    #         return
+    #     # detections = detect_objects_on_frame(img, self.model)
+    #     # return show_frame_with_detections(img, detections)
+    #     return segment_defect_test(img)
 
     # def run(self):
     #     cap = cv.VideoCapture(self.camera_port)
@@ -87,15 +89,15 @@ def update_image(cv_img, label):
     label.setPixmap(pixmap)
 
 
-if __name__ == '__main__':
-    # model = YOLO('yolov8s-seg.yaml').load('models/segment.pt')
-    # model = YOLO('models/logo.pt')
-    model = YOLO('../models/segment.pt')
-    img_path = '/Users/kunzhou/Desktop/DetectionApp/images/new/image019.jpg'
-    img = cv.imread(img_path)
-    thread = VideoThread(model=model)
-    detected_img = thread.detect_frame(img)
-    cv.imshow('detection', detected_img)
-    cv.waitKey()
-    # cv.destroyAllWindows()
+# if __name__ == '__main__':
+#     # model = YOLO('yolov8s-seg.yaml').load('models/segment.pt')
+#     # model = YOLO('models/logo.pt')
+#     model = YOLO('../models/segment.pt')
+#     img_path = '/Users/kunzhou/Desktop/DetectionApp/images/new/image019.jpg'
+#     img = cv.imread(img_path)
+#     thread = VideoThread(model=model)
+#     detected_img = thread.detect_frame(img)
+#     cv.imshow('detection', detected_img)
+#     cv.waitKey()
+#     # cv.destroyAllWindows()
 

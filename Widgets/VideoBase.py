@@ -43,36 +43,36 @@ class VideoBase(QObject):
             thread.start()
             self.threads.append(thread)
 
-    def detect_defect(self, original_img):
-        logo = 'dell'
-        lot = 'test'
-        original_imgs = []
-        detect_imgs = []
-        detect_defect = {}
-        scratch_count, stain_count = 0, 0
-        if thread.camera_port == 0 and original_img is not None:  # detect logo and lot number
-            try:
-                logo, lot = detect_logo_lot(original_img, self.logo_model, self.ocr_model, self.reader)
-
-            except LogoNotFoundException as e:
-                print(f'On port {thread.camera_port} -> {e}')
-                # logo = 'test'
-                return
-
-            except LotNumberNotFoundException as e:
-                print(f'On port {thread.camera_port} -> {e}')
-                # lot = 'test'
-                return
-
-            print(f'logo: {logo}, lot: {lot}')
-
-        # lot = '000'
-        # image contains damaged information
-        detect_img, temp_scratch_count, temp_stain_count = thread.detect_frame(original_img)
-        print(f'temp_scratch: {temp_scratch_count}, temp_stain: {temp_stain_count}')
-        scratch_count += temp_scratch_count
-        stain_count += temp_stain_count
-        detect_imgs.append(detect_img)
+    # def detect_defect(self, original_img):
+    #     logo = 'dell'
+    #     lot = 'test'
+    #     original_imgs = []
+    #     detect_imgs = []
+    #     detect_defect = {}
+    #     scratch_count, stain_count = 0, 0
+    #     if thread.camera_port == 0 and original_img is not None:  # detect logo and lot number
+    #         try:
+    #             logo, lot = detect_logo_lot(original_img, self.logo_model, self.ocr_model, self.reader)
+    #
+    #         except LogoNotFoundException as e:
+    #             print(f'On port {thread.camera_port} -> {e}')
+    #             # logo = 'test'
+    #             return
+    #
+    #         except LotNumberNotFoundException as e:
+    #             print(f'On port {thread.camera_port} -> {e}')
+    #             # lot = 'test'
+    #             return
+    #
+    #         print(f'logo: {logo}, lot: {lot}')
+    #
+    #     # lot = '000'
+    #     # image contains damaged information
+    #     detect_img, temp_scratch_count, temp_stain_count = thread.detect_frame(original_img)
+    #     print(f'temp_scratch: {temp_scratch_count}, temp_stain: {temp_stain_count}')
+    #     scratch_count += temp_scratch_count
+    #     stain_count += temp_stain_count
+    #     detect_imgs.append(detect_img)
 
     def capture_images(self):
         logo = 'dell'
