@@ -21,7 +21,7 @@ from PyQt5.QtWidgets import QLineEdit
 
 _APP_DIR = os.path.dirname(os.path.abspath(__file__))
 
-from Controller import *
+from .Controller import *
 from typing import Optional
 
 

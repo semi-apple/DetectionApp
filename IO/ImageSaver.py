@@ -7,6 +7,7 @@ Last Modified: 03 Jul 2024
 import os
 import cv2 as cv
 from datetime import datetime
+import numpy as np
 
 TRANSFER = {0: 'top', 1: 'bottom', 2: 'left', 3: 'right', 4: 'screen', 5: 'keyboard'}
 
@@ -45,6 +46,8 @@ class ImageSaver:
         for i, image in enumerate(imgs):
             if image is None:
                 break
+
+            assert isinstance(image, np.ndarray), "Image is not a numpy array"
             file_path = os.path.join(save_directory, f'{formatted_time}_{TRANSFER[i]}.png')
 
             # Save the image
