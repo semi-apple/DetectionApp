@@ -37,14 +37,21 @@ def get_app() -> Optional[QCoreApplication]:
 
 def init_models():
     model_path = os.path.join(_APP_DIR, '../Models')
+
     logo_model_path = os.path.join(model_path, 'logo.pt')
     ocr_model_path = os.path.join(model_path, 'ocr.pt')
     detect_model_path = os.path.join(model_path, 'detect.pt')
+    serial_region_model_path = os.path.join(model_path, 'region.pt')
+    serial_model_path = os.path.join(model_path, 'serial.pt')
+
     detect_model = YOLO(detect_model_path)
     logo_model = YOLO(logo_model_path)
     ocr_model = YOLO(ocr_model_path)
+    serial_region_model = YOLO(serial_region_model_path)
+    serial_model = YOLO(serial_model_path)
     reader = easyocr.Reader(['en'], gpu=False)
-    return {'detect': detect_model, 'logo': logo_model, 'ocr': ocr_model, 'reader': reader}
+    return {'detect': detect_model, 'logo': logo_model, 'ocr': ocr_model, 'reader': reader,
+            'serial_region': serial_region_model, 'serial': serial_model}
 
 
 class Controller(QObject):

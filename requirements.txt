@@ -8,3 +8,5 @@ PyQt5==5.15.11
 PyQt5_sip>=12.15,<13
 sahi~=0.11.15
 ultralytics==8.1.26
+opencv-python~=4.7.0.72
+pytesseract~=0.3.13

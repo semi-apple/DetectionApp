@@ -19,6 +19,7 @@ from plantcv import plantcv as pcv
 import cv2 as cv
 import numpy as np
 import random
+import pytesseract
 
 # arrange an instance segmentation model for test
 from sahi.utils.yolov8 import (
@@ -140,8 +141,38 @@ def detect_logo_lot(original_img, logo_model, ocr_model, reader):
     return logo, lot
 
 
-def detect_serial(img):
-    return 'serial_test'
+def detect_serial(img, ser_region_model, ser_model):
+    if img is None:
+        print(f'Image is None')
+        return
+    region_results = ser_region_model(img)
+    if region_results is None or region_results[1].boxes is None:
+        print('Cannot detect region with serial number, maybe caputre with wrong camera.')
+        return
+    region_xyxy_list = region_results[1].boxes.xyxy.tolist()[0]
+    rx1, ry1, rx2, ry2 = map(int, region_xyxy_list)
+    serial_region_img = img[ry1: ry2, rx1: rx2]
+
+    serial_results = ser_model(serial_region_img)
+    if serial_results is None or serial_results[1].boxex is None:
+        print('Cannot detect serial number.')
+        return
+
+    serial_xyxy_list = serial_results[1].boxes.xyxy.tolist()[0]
+    sx1, sy1, sx2, sy2 = map(int, serial_xyxy_list)
+    serial_img = serial_region_img[sy1: sy2, sx1: sx2]
+
+    gray_img = cv.cvtColor(serial_img, cv.COLOR_BGR2GRAY)
+    high_pass_kernel = np.array([[0, -1, 0],
+                                 [-1, 5, -1],
+                                 [0, -1, 0]])
+
+    sharpened = cv.filter2D(gray_img, -1, high_pass_kernel)
+    _, thresh = cv.threshold(sharpened, 180, 220, cv.THRESH_BINARY)
+
+    serial = pytesseract.image_to_string(thresh)
+
+    return serial
 
 
 if __name__ == "__main__":

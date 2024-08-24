@@ -32,8 +32,9 @@ class VideoBase(QObject):
         self.thread_labels = thread_labels
         self.buttons = buttons
         # self.models = models
-        self.logo_model, self.detect_model, self.ocr_model, self.reader = \
-            (models['logo'], models['detect'], models['ocr'], models['reader'])
+        self.logo_model, self.detect_model, self.ocr_model, self.reader, self.serial_region_model, self.serial_model = \
+            (models['logo'], models['detect'], models['ocr'], models['reader'], models['serial_region'],
+             models['serial'])
         self.image_saver = ImageSaver()
 
         self.buttons['detect_button'].clicked.connect(self.start_detection)
@@ -74,7 +75,7 @@ class VideoBase(QObject):
 
             if camera_port == 1:    # detect serial number
                 try:
-                    ser = detect_serial(original_img)
+                    ser = detect_serial(original_img, self.serial_region_model, self.serial_model)
                 except Exception as e:
                     print(f'Cannot detect serial numebr on camera {camera_port}')
                     return
