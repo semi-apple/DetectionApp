@@ -25,10 +25,10 @@ class ImageSaver:
             os.makedirs(save_directory)
 
         # Create the file path
-        for i, image in enumerate(imgs):
+        for image, camera_port in imgs:
             if image is None:
                 break
-            file_path = os.path.join(save_directory, f'{lot}_{TRANSFER[i]}.png')
+            file_path = os.path.join(save_directory, f'{lot}_{TRANSFER[camera_port]}.jpg')
 
             # Save the image
             cv.imwrite(file_path, image)
@@ -43,12 +43,12 @@ class ImageSaver:
             os.makedirs(save_directory)
 
         # Create the file path
-        for i, image in enumerate(imgs):
+        for image, camera_port in imgs:
             if image is None:
                 break
 
             assert isinstance(image, np.ndarray), "Image is not a numpy array"
-            file_path = os.path.join(save_directory, f'{formatted_time}_{TRANSFER[i]}.png')
+            file_path = os.path.join(save_directory, f'{formatted_time}_{TRANSFER[camera_port]}.jpg')
 
             # Save the image
             cv.imwrite(file_path, image)

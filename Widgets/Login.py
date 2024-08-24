@@ -73,19 +73,20 @@ class LoginWindow(QDialog):
         # self.close()
 
     def getUserInfo(self):
-        username = self.text_username.text()
-        password = self.text_password.text()
-        try:
-            if username not in USERS:
-                raise UserNotFoundException(username)
-
-            if USERS[username]['password'] != password:
-                raise IncorrectPasswordException(username)
-
-            return username, USERS[username]['level']
-
-        except Exception as e:
-            QMessageBox.warning(self, 'Login', str(e))
+        return 'Admin', '123456'
+        # username = self.text_username.text()
+        # password = self.text_password.text()
+        # try:
+        #     if username not in USERS:
+        #         raise UserNotFoundException(username)
+        #
+        #     if USERS[username]['password'] != password:
+        #         raise IncorrectPasswordException(username)
+        #
+        #     return username, USERS[username]['level']
+        #
+        # except Exception as e:
+        #     QMessageBox.warning(self, 'Login', str(e))
 
 
 if __name__ == '__main__':

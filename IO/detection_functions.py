@@ -140,6 +140,10 @@ def detect_logo_lot(original_img, logo_model, ocr_model, reader):
     return logo, lot
 
 
+def detect_serial(img):
+    return 'serial_test'
+
+
 if __name__ == "__main__":
     img = cv.imread('/Users/kunzhou/Desktop/DetectionApp/dataset/1306699/1306699_top.png')
 

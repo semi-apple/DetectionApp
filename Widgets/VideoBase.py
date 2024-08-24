@@ -7,6 +7,7 @@ Last Modified: 03 Jul 2024
 import os
 import sys
 
+import numpy as np
 from PyQt5.QtCore import QObject
 
 _Widget_dir = os.path.dirname(os.path.abspath(__file__))
@@ -17,6 +18,9 @@ from Widgets.VideoThread import *
 from IO.ImageSaver import *
 from Exceptions.DetectionExceptions import *
 from IO.ImageSaver import ImageSaver
+from IO.detection_functions import detect_logo_lot
+from IO.detection_functions import segment_defect_test
+from IO.detection_functions import detect_serial
 
 
 class VideoBase(QObject):
@@ -43,58 +47,65 @@ class VideoBase(QObject):
             thread.start()
             self.threads.append(thread)
 
-    # def detect_defect(self, original_img):
-    #     logo = 'dell'
-    #     lot = 'test'
-    #     original_imgs = []
-    #     detect_imgs = []
-    #     detect_defect = {}
-    #     scratch_count, stain_count = 0, 0
-    #     if thread.camera_port == 0 and original_img is not None:  # detect logo and lot number
-    #         try:
-    #             logo, lot = detect_logo_lot(original_img, self.logo_model, self.ocr_model, self.reader)
-    #
-    #         except LogoNotFoundException as e:
-    #             print(f'On port {thread.camera_port} -> {e}')
-    #             # logo = 'test'
-    #             return
-    #
-    #         except LotNumberNotFoundException as e:
-    #             print(f'On port {thread.camera_port} -> {e}')
-    #             # lot = 'test'
-    #             return
-    #
-    #         print(f'logo: {logo}, lot: {lot}')
-    #
-    #     # lot = '000'
-    #     # image contains damaged information
-    #     detect_img, temp_scratch_count, temp_stain_count = thread.detect_frame(original_img)
-    #     print(f'temp_scratch: {temp_scratch_count}, temp_stain: {temp_stain_count}')
-    #     scratch_count += temp_scratch_count
-    #     stain_count += temp_stain_count
-    #     detect_imgs.append(detect_img)
+    def detect_defect(self, original_img):
+        logo = 'dell'
+        lot = 'test'
+        original_imgs = []
+        detected_imgs = []
+        detect_defect = {}
+        scratch_count, stain_count = 0, 0
+        for original_img, camera_port in original_imgs:
+            if original_img is None:
+                continue
+
+            if camera_port == 0:  # detect logo and lot number
+                try:
+                    logo, lot = detect_logo_lot(original_img, self.logo_model, self.ocr_model, self.reader)
+
+                except LogoNotFoundException as e:
+                    print(f'On port {camera_port} -> {e}')
+                    # logo = 'test'
+                    return
+
+                except LotNumberNotFoundException as e:
+                    print(f'On port {camera_port} -> {e}')
+                    # lot = 'test'
+                    return
+
+            if camera_port == 1:    # detect serial number
+                try:
+                    ser = detect_serial(original_img)
+                except Exception as e:
+                    print(f'Cannot detect serial numebr on camera {camera_port}')
+                    return
+
+            print(f'logo: {logo}, lot: {lot}')
+            detected_img = segment_defect_test(original_img)
+            detected_imgs.append((np.copy(detected_img), camera_port))
+
+        return detected_imgs
 
     def capture_images(self):
         logo = 'dell'
         lot = 'test'
         original_imgs = []
-        detect_imgs = []
-        detect_defect = {}
-        scratch_count, stain_count = 0, 0
+        detected_imgs = []
+        # detect_defect = {}
+        # scratch_count, stain_count = 0, 0
 
         # set default logo capture camera as 0
         for thread in self.threads:
             if thread.running:
                 original_img = thread.capture()  # original image
-                original_imgs.append(np.copy(original_img))
+                original_imgs.append((np.copy(original_img), thread.camera_port))
 
         self.save_raw_info(folder_name='raw_imgs', imgs=original_imgs)
 
         # self.save_info(folder_name=lot, lot=lot, imgs=original_imgs)
-        # cv_folder = lot + '_cv'
-        # self.save_info(folder_name=cv_folder, lot=lot, imgs=detect_imgs)
 
-        # self.detect_defect(original_imgs)
+        # detected_imgs = self.detect_defect(original_imgs)
+        # cv_folder = lot + '_cv'
+        # self.save_info(folder_name=cv_folder, lot=lot, imgs=detected_imgs)
 
     def stop_detection(self):
         for thread in self.threads:
