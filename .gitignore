@@ -1,1 +1,33 @@
+# Python-related
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+
+# Virtual environment
+venv/
+ENV/
+env/
+testEnv/
+
+# PyInstaller
+build/
+dist/
+
+# macOS-specific files
+.DS_Store
+
+# IDE files (e.g., VSCode, PyCharm)
 .idea/
+.vscode/
+*.iml
+
+# Image or output files that should not be tracked
+images/
+*.jpg
+*.png
+*.jpeg
+
+# Log files
+*.log
