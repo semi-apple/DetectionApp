@@ -9,10 +9,15 @@ from .UserLoginException import (
     UserNotFoundException,
 )
 
+from .CameraExceptions import (
+    CameraInitException,
+)
+
 __all__ = (
     'LotNumberNotFoundException',
     'LogoNotFoundException',
     'SerialNumberNotFoundException',
     'IncorrectPasswordException',
     'UserNotFoundException',
+    'CameraInitException',
 )

@@ -38,7 +38,6 @@ import csv
 from PyQt5.QtWidgets import QPushButton, QVBoxLayout, QLineEdit, QLabel, QHBoxLayout, QMainWindow, QWidget, QGridLayout, \
     QSizePolicy, QSpacerItem, QFrame, QGroupBox, QStyleOptionGroupBox, QStyle, QFormLayout
 from PyQt5.QtWidgets import QApplication
-from Widgets.MenuBar import PanelMenuBar
 
 
 class PanelBase(QObject):
@@ -46,7 +45,7 @@ class PanelBase(QObject):
         super(PanelBase, self).__init__()
         self.input_lines = input_lines
         self.panel_buttons = panel_buttons
-        self.handle_signal()
+        # self.handle_signal()
 
     def handle_signal(self):
         self.panel_buttons['save_button'].clicked.connect(self.save_to_dataset)
@@ -76,9 +75,11 @@ class PanelBase(QObject):
             input_line.clear()
 
     @pyqtSlot(dict)
-    def set_laptop_info(self, detect_defect):
-        logo, lot, scratch_count, stain_count = \
-            detect_defect['logo'], detect_defect['lot'], detect_defect['scratch'], detect_defect['stain']
+    def set_detected_features(self, detected_features):
+        logo, lot, serial, scratch_count, stain_count = \
+            (detected_features['logo'], detected_features['lot'], detected_features['serial'],
+             detected_features['scratch'], detected_features['stain'])
+
         self.input_lines['model_input'].setText(logo)
         self.input_lines['lot_number_input'].setText(lot)
         self.input_lines['scratch_input'].setText(scratch_count)

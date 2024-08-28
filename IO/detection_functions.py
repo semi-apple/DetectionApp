@@ -12,7 +12,8 @@ Functions:
 Author: Kun
 Last Modified: 10 Jul 2024
 """
-from Exceptions.DetectionExceptions import LotNumberNotFoundException, LogoNotFoundException
+from Exceptions.DetectionExceptions import (LotNumberNotFoundException, LogoNotFoundException,
+                                            SerialNumberNotFoundException)
 
 from PIL import Image
 from plantcv import plantcv as pcv
@@ -78,6 +79,7 @@ def segment_defect(model, img):
         print(f"Error during segmentation: {e}")
         return img, stain_count, stain_count
 
+
 def segment_defect_test(img):
     model_path = '/Users/kunzhou/Desktop/DetectionApp/Models/detect.pt'
     detection_model_seg = AutoDetectionModel.from_pretrained(
@@ -104,12 +106,10 @@ def segment_defect_test(img):
     Image("demo_data/prediction_visual.png")
 
 
-def detect_logo_lot(original_img, logo_model, ocr_model, reader):
+def detect_logo(original_img, logo_model):
     logo = ''
-    lot = ''
-
     max_conf = -1
-    # detect logo
+
     logo_results = logo_model(original_img)
     for i, box in enumerate(logo_results[0].boxes):
         if box.conf > max_conf:
@@ -118,27 +118,32 @@ def detect_logo_lot(original_img, logo_model, ocr_model, reader):
     if len(logo) == 0:
         raise LogoNotFoundException()
 
+    return logo
+
+
+def detect_lot(original_img, ocr_model):
     # detect lot number
     lot_results = ocr_model(original_img)
 
     try:
-        xyxy = lot_results[0].boxes.xyxy[0].tolist()
-    except Exception as e:
+        xyxy_list = lot_results[0].boxes.xyxy[0].tolist()
+    except Exception:
         raise LotNumberNotFoundException()
-    x1, y1, x2, y2 = map(int, xyxy)
 
-    lot_region = original_img[y1:y2, x1:x2]
-    rotated_lot_region = cv.rotate(lot_region, cv.ROTATE_90_CLOCKWISE)
-    gray_region = cv.cvtColor(rotated_lot_region, cv.COLOR_BGR2GRAY)
-    _, lot_region_thresh = cv.threshold(gray_region, 200, 255, cv.THRESH_BINARY_INV)
-    # cv.imshow('thresh', lot_region_thresh)
-    # cv.waitKey()
-    # cv.destroyAllWindows()
-    lot_detections = reader.readtext(lot_region_thresh, allowlist='0123456789')
-    for detection in lot_detections:
-        lot += detection[1]
+    x1, y1, x2, y2 = map(int, xyxy_list)
+    lot_img = original_img[y1:y2, x1:x2]
 
-    return logo, lot
+    gray_img = cv.cvtColor(lot_img, cv.COLOR_BGR2GRAY)
+    high_pass_kernel = np.array([[0, -1, 0],
+                                 [-1, 5, -1],
+                                 [0, -1, 0]])
+
+    sharpened = cv.filter2D(gray_img, -1, high_pass_kernel)
+    _, thresh = cv.threshold(sharpened, 180, 220, cv.THRESH_BINARY)
+
+    lot_number = pytesseract.image_to_string(thresh)
+
+    return lot_number
 
 
 def detect_serial(img, ser_region_model, ser_model):
@@ -146,19 +151,24 @@ def detect_serial(img, ser_region_model, ser_model):
         print(f'Image is None')
         return
     region_results = ser_region_model(img)
-    if region_results is None or region_results[1].boxes is None:
+
+    try:
+        region_xyxy_list = region_results[1].boxes.xyxy.tolist()[0]
+    except Exception as e:
         print('Cannot detect region with serial number, maybe caputre with wrong camera.')
-        return
-    region_xyxy_list = region_results[1].boxes.xyxy.tolist()[0]
+        raise SerialNumberNotFoundException()
+
     rx1, ry1, rx2, ry2 = map(int, region_xyxy_list)
     serial_region_img = img[ry1: ry2, rx1: rx2]
 
     serial_results = ser_model(serial_region_img)
-    if serial_results is None or serial_results[1].boxex is None:
-        print('Cannot detect serial number.')
-        return
 
-    serial_xyxy_list = serial_results[1].boxes.xyxy.tolist()[0]
+    try:
+        serial_xyxy_list = serial_results[1].boxes.xyxy.tolist()[0]
+    except Exception as e:
+        print('Cannot detect region with serial number, maybe caputre with wrong camera.')
+        raise SerialNumberNotFoundException()
+
     sx1, sy1, sx2, sy2 = map(int, serial_xyxy_list)
     serial_img = serial_region_img[sy1: sy2, sx1: sx2]
 

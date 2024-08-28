@@ -5,20 +5,21 @@ Author: Kun
 Last Modified: 03 Jul 2024
 """
 import os
-import sys
+# import sys
 
+from PyQt5.QtCore import QObject, pyqtSlot, Qt, pyqtSignal
+from PyQt5.QtGui import QImage, QPixmap
 import numpy as np
-from PyQt5.QtCore import QObject
 
 _Widget_dir = os.path.dirname(os.path.abspath(__file__))
 
-from PyQt5.QtWidgets import QLabel, QPushButton, QApplication, QGridLayout, QMainWindow, QWidget
-import easyocr
-from Widgets.VideoThread import *
-from IO.ImageSaver import *
-from Exceptions.DetectionExceptions import *
+from Widgets.VideoThread import VideoThread
+from Exceptions.DetectionExceptions import (SerialNumberNotFoundException, LotNumberNotFoundException,
+                                            LogoNotFoundException)
+from Exceptions.CameraExceptions import CameraInitException
 from IO.ImageSaver import ImageSaver
-from IO.detection_functions import detect_logo_lot
+from IO.detection_functions import detect_logo
+from IO.detection_functions import detect_lot
 from IO.detection_functions import segment_defect_test
 from IO.detection_functions import detect_serial
 
@@ -32,9 +33,8 @@ class VideoBase(QObject):
         self.thread_labels = thread_labels
         self.buttons = buttons
         # self.models = models
-        self.logo_model, self.detect_model, self.ocr_model, self.reader, self.serial_region_model, self.serial_model = \
-            (models['logo'], models['detect'], models['ocr'], models['reader'], models['serial_region'],
-             models['serial'])
+        self.logo_model, self.detect_model, self.lot_model, self.serial_region_model, self.serial_model = \
+            (models['logo'], models['detect'], models['lot'], models['serial_region'], models['serial'])
         self.image_saver = ImageSaver()
 
         self.buttons['detect_button'].clicked.connect(self.start_detection)
@@ -48,51 +48,51 @@ class VideoBase(QObject):
             thread.start()
             self.threads.append(thread)
 
-    def detect_defect(self, original_img):
-        logo = 'dell'
-        lot = 'test'
-        original_imgs = []
+    def detect_defect(self, original_imgs):
+        logo, lot, serial = '', '', ''
         detected_imgs = []
-        detect_defect = {}
-        scratch_count, stain_count = 0, 0
+        detected_features = {}
+
         for original_img, camera_port in original_imgs:
             if original_img is None:
                 continue
 
             if camera_port == 0:  # detect logo and lot number
                 try:
-                    logo, lot = detect_logo_lot(original_img, self.logo_model, self.ocr_model, self.reader)
+                    logo = detect_logo(original_img, self.logo_model)
+                    lot = detect_lot(original_img, self.lot_model)
+                    print(f'Logo: {logo}, Lot Number: {lot}')
 
                 except LogoNotFoundException as e:
                     print(f'On port {camera_port} -> {e}')
-                    # logo = 'test'
-                    return
+                    logo = 'Logo_Not_Found'
 
                 except LotNumberNotFoundException as e:
                     print(f'On port {camera_port} -> {e}')
-                    # lot = 'test'
-                    return
+                    lot = 'Lot_Not_Found'
+
+                finally:
+                    detected_features['logo'], detected_features['lot'] = logo, lot
 
             if camera_port == 1:    # detect serial number
                 try:
-                    ser = detect_serial(original_img, self.serial_region_model, self.serial_model)
-                except Exception as e:
-                    print(f'Cannot detect serial numebr on camera {camera_port}')
-                    return
+                    serial = detect_serial(original_img, self.serial_region_model, self.serial_model)
+                    print(f'Serial Number: {serial}')
 
-            print(f'logo: {logo}, lot: {lot}')
+                except SerialNumberNotFoundException as e:
+                    print(f'On port {camera_port} -> {e}')
+                    serial = 'Serial_Not_Found'
+
+                finally:
+                    detected_features['serial'] = serial
+
             detected_img = segment_defect_test(original_img)
             detected_imgs.append((np.copy(detected_img), camera_port))
 
-        return detected_imgs
+        return detected_imgs, detected_features
 
     def capture_images(self):
-        logo = 'dell'
-        lot = 'test'
         original_imgs = []
-        detected_imgs = []
-        # detect_defect = {}
-        # scratch_count, stain_count = 0, 0
 
         # set default logo capture camera as 0
         for thread in self.threads:
@@ -102,9 +102,21 @@ class VideoBase(QObject):
 
         self.save_raw_info(folder_name='raw_imgs', imgs=original_imgs)
 
-        # self.save_info(folder_name=lot, lot=lot, imgs=original_imgs)
+        """
+            Whether we need to store images over here, or we could store images on Control Panel, like:
+            set signal, emit to Control Panel (raw images, cv images, detected features), store images 
+            and detected feature on Control Panel.
+            
+            One good thing to do so is that if there is a detection error occurred, we can store images 
+            with correct info by fixing problem manually.
+             
+            One bad thing is that it is not automatic.
+        """
 
-        # detected_imgs = self.detect_defect(original_imgs)
+        # detected_imgs, detected_features = self.detect_defect(original_imgs)
+        # lot = detected_features['lot']
+        #
+        # self.save_info(folder_name=lot, lot=lot, imgs=original_imgs)
         # cv_folder = lot + '_cv'
         # self.save_info(folder_name=cv_folder, lot=lot, imgs=detected_imgs)
 

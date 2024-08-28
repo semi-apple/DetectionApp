@@ -12,6 +12,8 @@ from ultralytics import YOLO
 import cv2 as cv
 import numpy as np
 
+from Exceptions.CameraExceptions import CameraInitException
+
 
 def convert_cv_qt(cv_img):
     """convert cv format to qt format"""
@@ -46,11 +48,12 @@ class VideoThread(QThread):
     def run(self):
         cap = cv.VideoCapture(self.camera_port)
         if cap.isOpened():
+            self.running = True
+        else:
             self.running = False
             print(f'Cannot init camera {self.camera_port}, please make sure the camera is installed correctly.')
             cap.release()
-        else:
-            self.running = True
+            # raise CameraInitException()
 
         while self.running:
             ret, frame = cap.read()

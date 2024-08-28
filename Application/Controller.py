@@ -21,10 +21,10 @@ _APP_DIR = os.path.dirname(os.path.abspath(__file__))
 
 from Widgets.VideoBase import *
 from Widgets.ControlPanel import PanelBase
+from Widgets.MenuBar import BarBase
 from PyQt5.QtWidgets import QApplication, QMainWindow
 from PyQt5.QtCore import QCoreApplication, QObject, pyqtSlot
 from IO.ImageSaver import *
-import easyocr
 from UI import *
 import sys
 from ultralytics import YOLO
@@ -39,19 +39,19 @@ def init_models():
     model_path = os.path.join(_APP_DIR, '../Models')
 
     logo_model_path = os.path.join(model_path, 'logo.pt')
-    ocr_model_path = os.path.join(model_path, 'ocr.pt')
+    lot_model_path = os.path.join(model_path, 'lot.pt')
     detect_model_path = os.path.join(model_path, 'detect.pt')
     serial_region_model_path = os.path.join(model_path, 'region.pt')
     serial_model_path = os.path.join(model_path, 'serial.pt')
 
     detect_model = YOLO(detect_model_path)
     logo_model = YOLO(logo_model_path)
-    ocr_model = YOLO(ocr_model_path)
+    lot_model = YOLO(lot_model_path)
     serial_region_model = YOLO(serial_region_model_path)
     serial_model = YOLO(serial_model_path)
-    reader = easyocr.Reader(['en'], gpu=False)
-    return {'detect': detect_model, 'logo': logo_model, 'ocr': ocr_model, 'reader': reader,
-            'serial_region': serial_region_model, 'serial': serial_model}
+
+    return {'detect': detect_model, 'logo': logo_model, 'lot': lot_model, 'serial_region': serial_region_model,
+            'serial': serial_model}
 
 
 class Controller(QObject):
@@ -68,6 +68,10 @@ class Controller(QObject):
         self.input_lines = {}
         self.panel_buttons = {}
         self.panel_widget = None
+        
+        self.actionDict = {}
+        self.menuBar = None
+        self.init_menu_bar()
 
         self.models = init_models()
         self.init_video_base()
@@ -76,6 +80,33 @@ class Controller(QObject):
 
     def handle_signal(self):
         pass
+
+    def init_menu_bar(self):
+        actionOpenFile = getattr(self.ui, 'actionOpenFile')
+        self.actionDict['openFile'] = actionOpenFile
+
+        actionExitApp = getattr(self.ui, 'actionExitApp')
+        self.actionDict['exitApp'] = actionExitApp
+
+        actionOpenDatabase = getattr(self.ui, 'actionOpenDatabase')
+        self.actionDict['openDatabase'] = actionOpenDatabase
+
+        actionExportData = getattr(self.ui, 'actionExportData')
+        self.actionDict['exportData'] = actionExportData
+
+        actionProfile = getattr(self.ui, 'actionProfile')
+        self.actionDict['profile'] = actionProfile
+
+        actionSignout = getattr(self.ui, 'actionSignout')
+        self.actionDict['signout'] = actionSignout
+
+        actionDocuments = getattr(self.ui, 'actionDocuments')
+        self.actionDict['documents'] = actionDocuments
+
+        actionInstructions = getattr(self.ui, 'actionInstructions')
+        self.actionDict['instructions'] = actionInstructions
+
+        self.menuBar = BarBase(self.actionDict)
 
     def init_video_base(self):
         for i in range(6):
@@ -107,7 +138,7 @@ class Controller(QObject):
         self.panel_buttons['clear_button'] = clear_button
 
         self.panel_widget = PanelBase(self.input_lines, self.panel_buttons)
-        self.video_widget.laptop_info.connect(self.panel_widget.set_laptop_info)
+        self.video_widget.laptop_info.connect(self.panel_widget.set_detected_features)
 
 
 if __name__ == '__main__':
