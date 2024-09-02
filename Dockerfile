@@ -47,3 +47,6 @@ ENV DISPLAY=:99
 
 CMD Xvfb :99 -screen 0 1024x768x24 -ac +extension GLX +render -noreset & \
     python Application/DetectionApp.py
+
+# RUN sudo apt-get install '^libxcb.*-dev' libx11-xcb-dev libglu1-mesa-dev libxrender-dev libxi-dev libxkbcommon-dev libxkbcommon-x11-dev
+# rm /home/s4764481/anaconda3/envs/detection_app/lib/python3.9/site-packages/cv2/qt/plugins/platforms/libqxcb.so
