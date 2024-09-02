@@ -45,6 +45,7 @@ class BarBase(QObject):
         super(BarBase, self).__init__()
         self.actionDict = actionDict
         self.handle_actions()
+        self.handle_modules()
 
     def handle_actions(self):
         actionOpenFile = self.actionDict['openFile']
@@ -64,9 +65,8 @@ class BarBase(QObject):
         actionInstructions = self.actionDict['instructions']
         actionInstructions.triggered.connect(self.open_instruction)
 
-    @pyqtSlot()
-    def destroy_app(self):
-        get_app().quit()
+    def handle_modules(self):
+        self.exportModule = ExportFile()
 
     @pyqtSlot()
     def open_file(self):
@@ -79,8 +79,7 @@ class BarBase(QObject):
 
     @pyqtSlot()
     def export_data(self):
-        export = ExportFile()
-        export.show()
+        self.exportModule.exec_()
 
     @pyqtSlot()
     def acc_profile(self):
@@ -100,7 +99,7 @@ class BarBase(QObject):
 
     @pyqtSlot()
     def exit_app(self):
-        pass
+        get_app().quit()
 
 
 
