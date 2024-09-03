@@ -22,6 +22,7 @@ from PyQt5.QtWidgets import QLineEdit
 _APP_DIR = os.path.dirname(os.path.abspath(__file__))
 
 from .Controller import *
+from UI.UI import Ui_MainWindow
 from typing import Optional
 
 
@@ -37,7 +38,6 @@ class DetectionApp(QMainWindow):
         # uic.loadUi('../draft.ui', self)
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
-        self.setGeometry(get_app().screens()[0].geometry())
         self.controller = Controller(self.ui)
         self.handle_signal()
 
@@ -50,6 +50,7 @@ class DetectionApp(QMainWindow):
         if username is not None and level is not None:
             self.controller.username = username
             self.controller.level = level
+            self.setGeometry(get_app().screens()[0].geometry())
             self.show()
 
 

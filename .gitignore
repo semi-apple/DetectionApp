@@ -31,3 +31,6 @@ images/
 
 # Log files
 *.log
+
+# test file
+test.py
