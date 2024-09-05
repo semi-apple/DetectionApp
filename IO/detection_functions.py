@@ -140,8 +140,12 @@ def detect_lot(original_img, ocr_model):
 
     sharpened = cv.filter2D(gray_img, -1, high_pass_kernel)
     _, thresh = cv.threshold(sharpened, 180, 220, cv.THRESH_BINARY)
+    cv.imshow('Lot image', thresh)
+    cv.waitKey()
+    cv.destroyAllWindows()
 
     lot_number = pytesseract.image_to_string(thresh)
+    print(f'lot number: {lot_number}')
 
     return lot_number
 

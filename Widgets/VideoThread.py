@@ -43,7 +43,7 @@ class VideoThread(QThread):
         self.camera_port = camera_port
         self.model = model
         self.running = True
-        # self.run()
+        # self.run
 
     def run(self):
         cap = cv.VideoCapture(self.camera_port)

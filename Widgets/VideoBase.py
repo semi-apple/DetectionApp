@@ -86,8 +86,9 @@ class VideoBase(QObject):
                 finally:
                     detected_features['serial'] = serial
 
-            detected_img = segment_defect_test(original_img)
-            detected_imgs.append((np.copy(detected_img), camera_port))
+            # detected_img = segment_defect_test(original_img)
+            # detected_imgs.append((np.copy(detected_img), camera_port))
+            detected_imgs.append((np.copy(original_img), camera_port))
 
         return detected_imgs, detected_features
 
@@ -100,7 +101,7 @@ class VideoBase(QObject):
                 original_img = thread.capture()  # original image
                 original_imgs.append((np.copy(original_img), thread.camera_port))
 
-        self.save_raw_info(folder_name='raw_imgs', imgs=original_imgs)
+        # self.save_raw_info(folder_name='raw_imgs', imgs=original_imgs)
 
         """
             Whether we need to store images over here, or we could store images on Control Panel, like:
@@ -113,8 +114,10 @@ class VideoBase(QObject):
             One bad thing is that it is not automatic.
         """
 
-        # detected_imgs, detected_features = self.detect_defect(original_imgs)
-        # lot = detected_features['lot']
+        detected_imgs, detected_features = self.detect_defect(original_imgs)
+        for key, value in detected_features.items():
+            print(f'{key}: {value}')
+        lot = detected_features['lot']
         #
         # self.save_info(folder_name=lot, lot=lot, imgs=original_imgs)
         # cv_folder = lot + '_cv'

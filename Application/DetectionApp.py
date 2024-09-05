@@ -16,12 +16,14 @@ Author: Kun
 Last Modified: 10 Jul 2024
 """
 import os
+import sys
 
-from PyQt5.QtWidgets import QLineEdit
+from PyQt5.QtCore import QCoreApplication, pyqtSignal
+from PyQt5.QtWidgets import QLineEdit, QApplication, QMainWindow
 
 _APP_DIR = os.path.dirname(os.path.abspath(__file__))
 
-from .Controller import *
+from .Controller import Controller
 from UI.UI import Ui_MainWindow
 from typing import Optional
 

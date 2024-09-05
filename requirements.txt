@@ -9,3 +9,7 @@ ultralytics==8.1.26
 opencv-python~=4.7.0.72
 pytesseract~=0.3.13
 pyinstaller
+google-api-python-client
+google-auth-httplib2
+google-auth-oauthlib
+pydrive

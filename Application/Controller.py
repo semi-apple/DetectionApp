@@ -25,7 +25,7 @@ from Widgets.MenuBar import BarBase
 from PyQt5.QtWidgets import QApplication, QMainWindow
 from PyQt5.QtCore import QCoreApplication, QObject, pyqtSlot
 from IO.ImageSaver import *
-from UI import *
+from UI.UI import Ui_MainWindow
 import sys
 from ultralytics import YOLO
 from typing import Optional

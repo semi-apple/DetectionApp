@@ -79,6 +79,7 @@ class BarBase(QObject):
 
     @pyqtSlot()
     def export_data(self):
+        self.exportModule.show()
         self.exportModule.exec_()
 
     @pyqtSlot()
