@@ -5,6 +5,8 @@ Author: Kun
 Last Modified: 03 Jul 2024
 """
 import os
+import subprocess
+
 # import sys
 
 from PyQt5.QtCore import QObject, pyqtSlot, Qt, pyqtSignal
@@ -22,6 +24,49 @@ from IO.detection_functions import detect_logo
 from IO.detection_functions import detect_lot
 from IO.detection_functions import segment_defect_test
 from IO.detection_functions import detect_serial
+import cv2 as cv
+
+location_id_to_camera_index = {
+    0: "0x01111000",
+    1: "0x01112000",
+    2: "0x01113000",
+    3: "0x01114000",
+    4: "0x01120000",
+    5: "0x01130000",
+}
+
+def get_usb_info():
+    result = subprocess.run(['system_profiler', 'SPUSBDataType'], stdout=subprocess.PIPE)
+    usb_info = result.stdout.decode('utf-8')
+    return usb_info
+
+def extract_location_ids(usb_info):
+    location_ids = []
+    lines = usb_info.split('\n')
+    for line in lines:
+        if 'Location ID:' in line:
+            location_id = line.split('Location ID:')[-1].strip()
+            location_ids.append(location_id)
+    return location_ids
+
+
+def list_available_cameras():
+    index = 0
+    arr = []
+    while True:
+        cap = cv.VideoCapture(index)
+        if not cap.read()[0]:
+            break
+        else:
+            arr.append(index)
+        cap.release()
+        index += 1
+    return arr
+
+
+def get_usb_device_info():
+    result = subprocess.run(['system_profiler', 'SPUSBDataType'], stdout=subprocess.PIPE)
+    return result.stdout.decode('utf-8')
 
 
 class VideoBase(QObject):
@@ -37,11 +82,18 @@ class VideoBase(QObject):
             (models['logo'], models['detect'], models['lot'], models['serial_region'], models['serial'])
         self.image_saver = ImageSaver()
 
+        # usb_info = get_usb_info()
+        # location_ids = extract_location_ids(usb_info)
+
         self.buttons['detect_button'].clicked.connect(self.start_detection)
         self.buttons['capture_button'].clicked.connect(self.capture_images)
         self.buttons['stop_button'].clicked.connect(self.stop_detection)
 
     def start_detection(self):
+        # i = 1
+        # # if i:
+        # usb_info = get_usb_device_info()
+        # print(usb_info)
         for i in range(6):
             thread = VideoThread(i, self.detect_model)
             thread.change_pixmap_signal.connect(getattr(self, f'set_image{i}'))
@@ -61,7 +113,6 @@ class VideoBase(QObject):
                 try:
                     logo = detect_logo(original_img, self.logo_model)
                     lot = detect_lot(original_img, self.lot_model)
-                    print(f'Logo: {logo}, Lot Number: {lot}')
 
                 except LogoNotFoundException as e:
                     print(f'On port {camera_port} -> {e}')
@@ -73,6 +124,7 @@ class VideoBase(QObject):
 
                 finally:
                     detected_features['logo'], detected_features['lot'] = logo, lot
+                    print(f'Logo: {logo}, Lot Number: {lot}')
 
             if camera_port == 1:    # detect serial number
                 try:
@@ -97,11 +149,12 @@ class VideoBase(QObject):
 
         # set default logo capture camera as 0
         for thread in self.threads:
-            if thread.running:
+            if thread.running and thread.camera_port == 1:
+            # if thread.running:
                 original_img = thread.capture()  # original image
                 original_imgs.append((np.copy(original_img), thread.camera_port))
 
-        # self.save_raw_info(folder_name='raw_imgs', imgs=original_imgs)
+        self.save_raw_info(folder_name='raw_imgs', imgs=original_imgs)
 
         """
             Whether we need to store images over here, or we could store images on Control Panel, like:
@@ -114,10 +167,10 @@ class VideoBase(QObject):
             One bad thing is that it is not automatic.
         """
 
-        detected_imgs, detected_features = self.detect_defect(original_imgs)
-        for key, value in detected_features.items():
-            print(f'{key}: {value}')
-        lot = detected_features['lot']
+        # detected_imgs, detected_features = self.detect_defect(original_imgs)
+        # for key, value in detected_features.items():
+        #     print(f'{key}: {value}')
+        # lot = detected_features['lot']
         #
         # self.save_info(folder_name=lot, lot=lot, imgs=original_imgs)
         # cv_folder = lot + '_cv'

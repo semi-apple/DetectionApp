@@ -61,6 +61,7 @@ class VideoThread(QThread):
                 qt_image = convert_cv_qt(frame)
                 self.change_pixmap_signal.emit(qt_image)
             else:
+                print(f'Failed to capture image from camera {self.camera_port}')
                 self.running = False
         cap.release()
 

@@ -162,6 +162,7 @@ class ExportFile(QDialog):
             selected_img_folder = [f for f in os.listdir(dataset_path) if exportDate == os.path.splitext(f)[0][9:17]]
             if len(selected_img_folder) == 0:
                 print(f'No folder on selected date: {self.display_date}')
+                return
 
         else:
             print('No date selected.')
