@@ -45,7 +45,7 @@ class BarBase(QObject):
         super(BarBase, self).__init__()
         self.actionDict = actionDict
         self.handle_actions()
-        self.handle_modules()
+        # self.handle_modules()
 
     def handle_actions(self):
         actionOpenFile = self.actionDict['openFile']

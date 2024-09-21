@@ -9,7 +9,7 @@ import cv2 as cv
 from datetime import datetime
 import numpy as np
 
-TRANSFER = {0: 'top', 1: 'bottom', 2: 'left', 3: 'right', 4: 'screen', 5: 'keyboard'}
+TRANSFER = {1: 'bottom', 0: 'top', 2: 'left', 3: 'right', 4: 'screen', 5: 'keyboard'}
 
 
 class ImageSaver:

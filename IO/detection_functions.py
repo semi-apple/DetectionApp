@@ -34,13 +34,17 @@ from sahi.predict import get_prediction, get_sliced_prediction, predict
 from IPython.display import Image
 
 
-def segment_defect(model, img):
+def detect_defects(img, model):
     classes = list(model.names.values())
     classes_ids = [classes.index(cls) for cls in classes]
 
     conf = 0.2
+
     scratch_id = classes.index('scratch')
     stain_id = classes.index('stain')
+    chip_id = classes.index('chip')
+    missing_id = classes.index('missing')
+    dent_id = classes.index('dent')
 
     scratch_count, stain_count = 0, 0
 
@@ -48,36 +52,55 @@ def segment_defect(model, img):
     colors = [random.choices(range(256), k=3) for _ in classes_ids]
     # print("Results:", results)
     try:
-        for result in results:
-            for mask, box in zip(result.masks.xy, result.boxes):
-                # print(f"Mask: {mask}")
-                # print(f"Mask shape: {mask.shape}")
-                defect_id = int(box.cls[0])
-                if defect_id == scratch_id:
-                    scratch_count += 1
-                elif defect_id == stain_id:
-                    stain_count += 1
-                else:
-                    break
-
-                if mask.size == 0 or len(mask.shape) != 2 or mask.shape[1] != 2:
-                    print("Error: Mask points do not have the correct shape")
-                    continue
-
-                points = np.int32(mask)
-                # print(f"Points: {points}")
-                # print(f"Points shape: {points.shape}")
-
-                color_number = classes_ids.index(int(box.cls[0]))
-                cv.fillPoly(img, [points], colors[color_number])
+        # for result in results:
+        #     for mask, box in zip(result.masks.xy, result.boxes):
+        #         # print(f"Mask: {mask}")
+        #         # print(f"Mask shape: {mask.shape}")
+        #         defect_id = int(box.cls[0])
+        #         # if defect_id == scratch_id:
+        #         #     scratch_count += 1
+        #         # elif defect_id == stain_id:
+        #         #     stain_count += 1
+        #         # else:
+        #         #     break
         #
-        # cv.imshow('Image', img)
-        # cv.waitKey()
-        return img, stain_count, stain_count
+        #         if mask.size == 0 or len(mask.shape) != 2 or mask.shape[1] != 2:
+        #             print("Error: Mask points do not have the correct shape")
+        #             continue
+        #
+        #         points = np.int32(mask)
+        #         # print(f"Points: {points}")
+        #         # print(f"Points shape: {points.shape}")
+        #
+        #         color_number = classes_ids.index(defect_id)
+        #         color = colors[color_number]
+        #         cv.polylines(img, [points], isClosed=True, color=color, thickness=2)
+        #         # cv.fillPoly(img, [points], colors[color_number])
+        #
+        #         label = f"{classes[defect_id]}: {box.conf[0]}"
+        #         x1, y1, _, _ = map(int, box.xyxy[0])
+        #         cv.putText(img, label, (x1, y1 - 10), cv.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
+
+        for result in results:
+            for boxes in result.boxes:
+                x1, y1, x2, y2 = map(int, boxes.xyxy[0])
+                defect_id = int(boxes.cls[0])
+                color_number = classes_ids.index(defect_id)
+                color = colors[color_number]
+                thickness = 3
+                cv.rectangle(img, (x1, y1), (x2, y2), color, thickness)
+                label = f"{classes[defect_id]}: {boxes.conf[0]}"
+                x1, y1, _, _ = map(int, boxes.xyxy[0])
+                cv.putText(img, label, (x1, y1 - 10), cv.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
+
+        cv.imshow('Image', img)
+        cv.waitKey()
+        cv.destroyAllWindows()
+        return img
 
     except Exception as e:
         print(f"Error during segmentation: {e}")
-        return img, stain_count, stain_count
+        return img
 
 
 def segment_defect_test(img):
