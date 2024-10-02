@@ -22,8 +22,8 @@ from Exceptions.CameraExceptions import CameraInitException
 from IO.ImageSaver import ImageSaver
 from IO.detection_functions import detect_logo
 from IO.detection_functions import detect_lot
-from IO.detection_functions import detect_defects
-from IO.detection_functions import detect_serial
+from IO.detection_functions import defects_detect
+from IO.detection_functions import defects_segment
 import cv2 as cv
 
 location_id_to_camera_index = {
@@ -138,7 +138,8 @@ class VideoBase(QObject):
             #     finally:
             #         detected_features['serial'] = serial
 
-            detected_img = detect_defects(original_img, self.defects_model)
+            # detected_img = defects_detect(original_img, self.defects_model)
+            detected_img = defects_segment(original_img)
             detected_imgs.append((np.copy(detected_img), camera_port))
             # detected_imgs.append((np.copy(original_img), camera_port))
 
