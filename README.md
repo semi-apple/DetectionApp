@@ -17,25 +17,30 @@ scratches on random notebooks using image processing and machine learning techni
 ## Directory Structure
 
 ### App
-Contains the main application logic, including the user interface and core functionality.
+Contains the main application logic, including the user interface and controller class.
 
-### DataAnnotation
-Includes tools and scripts for annotating the dataset, helping in marking scratches on notebook images.
+### dataset
+Store captured and detected laptop images. Each image is stored with timestamp and surface information.
 
-### Dataset
-Holds the dataset of notebook images, including both annotated and raw images used for training and testing.
+### Detection.app
+An packaged app that can run by clicking.
+
+### Exceptions
+All exceptions that would meet during detecting.
 
 ### IO
-Utility scripts for handling input and output operations, such as reading images and saving results.
+Utility scripts for handling input and output operations, such as reading images, saving results, uploading function, etc.
 
-### Widget
-Components and widgets used in the application interface.
+### Models
+Stores models for detecting, including logo detection model, serial number detection model, defect detection model, etc.
 
-### images
-Sample images used in the project for testing and demonstration purposes.
+### UI
+UI interface.
+
+### Widgets
+Core function for interaction, including menubar, control panel, login, video base and video thread.
 
 ## Installation
-Caution: You may need to run the code on pycharm since there might be some library dependency problem.
 
 1. Clone the repository:
    ```bash
@@ -44,16 +49,10 @@ Caution: You may need to run the code on pycharm since there might be some libra
    
 2. Install libraries:
    ```bash
-   pip install numpy
-   pip install plantcv
-   pip install opencv-python
-   pip install pyqt5
-   pip install ultralytics
-   pip install easyocr
+   pip install -r requirements.txt
    ```
-   
 ## Usage
-To run the main application, use the following command:
+To run the main application, click `Detection.app` or use the following command:
   ```bash
   python main.py
   ```

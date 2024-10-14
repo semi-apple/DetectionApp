@@ -59,10 +59,9 @@
 				<key>ActionParameters</key>
 				<dict>
 					<key>COMMAND_STRING</key>
-					<string>cd /Users/kunzhou/Desktop/DetectionApp
-source venv/bin/activate
-python3 main.py
-</string>
+					<string>cd /Users/kunzhou/Desktop/DetectionApp || {echo "Cannot find path or directory"; exit 1;}
+source venv/bin/activate || {echo "Cannot find or activate virtual environment"; exit 1:}
+python3 main.py || {echo "Failed to run Python script"; exit 1;}</string>
 					<key>CheckedForUserDefaultShell</key>
 					<true/>
 					<key>inputMethod</key>
@@ -175,7 +174,7 @@ python3 main.py
 				<key>isViewVisible</key>
 				<integer>1</integer>
 				<key>location</key>
-				<string>347.000000:252.000000</string>
+				<string>347.000000:432.000000</string>
 				<key>nibPath</key>
 				<string>/System/Library/Automator/Run Shell Script.action/Contents/Resources/Base.lproj/main.nib</string>
 			</dict>

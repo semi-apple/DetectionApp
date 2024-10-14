@@ -25,7 +25,7 @@ from Widgets.MenuBar import BarBase
 from PyQt5.QtWidgets import QApplication, QMainWindow
 from PyQt5.QtCore import QCoreApplication, QObject, pyqtSlot
 from IO.ImageSaver import *
-from UI import *
+from UI.UI import Ui_MainWindow
 import sys
 from ultralytics import YOLO
 from typing import Optional
@@ -40,17 +40,17 @@ def init_models():
 
     logo_model_path = os.path.join(model_path, 'logo.pt')
     lot_model_path = os.path.join(model_path, 'lot.pt')
-    detect_model_path = os.path.join(model_path, 'detect.pt')
+    defects_model_path = os.path.join(model_path, 'defects.pt')
     serial_region_model_path = os.path.join(model_path, 'region.pt')
     serial_model_path = os.path.join(model_path, 'serial.pt')
 
-    detect_model = YOLO(detect_model_path)
+    defects_model = YOLO(defects_model_path)
     logo_model = YOLO(logo_model_path)
     lot_model = YOLO(lot_model_path)
     serial_region_model = YOLO(serial_region_model_path)
     serial_model = YOLO(serial_model_path)
 
-    return {'detect': detect_model, 'logo': logo_model, 'lot': lot_model, 'serial_region': serial_region_model,
+    return {'defects': defects_model, 'logo': logo_model, 'lot': lot_model, 'serial_region': serial_region_model,
             'serial': serial_model}
 
 
