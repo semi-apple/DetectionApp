@@ -163,7 +163,7 @@ def defects_detect(img, model):
         return img
 
 
-def segment_with_sahi(original_img):
+def segment_with_sahi(original_img, num_blocks):
     laptop_model_path = '/Users/kunzhou/Desktop/DetectionApp/Models/laptop.pt'
     laptop_model = YOLO(laptop_model_path)
 
@@ -174,7 +174,7 @@ def segment_with_sahi(original_img):
     rx1, ry1, rx2, ry2 = map(int, region_xyxy_list)
     laptop_region_img = img[ry1: ry2, rx1: rx2]
 
-    model_path = '/Users/kunzhou/Desktop/Detection Project/training/tile_2_2_s-seg/train/weights/best.pt'
+    model_path = '/Users/kunzhou/Desktop/DetectionApp/Models/defects_scr_key_seg.pt'
     model = YOLO(model_path)
     detection_model_seg = AutoDetectionModel.from_pretrained(
         model_type='yolov8',
@@ -185,12 +185,12 @@ def segment_with_sahi(original_img):
 
     h = laptop_region_img.shape[0]
     w = laptop_region_img.shape[1]
-
+    W = num_blocks - 0.2 * (num_blocks - 1)
     results = get_sliced_prediction(
         laptop_region_img,
         detection_model_seg,
-        slice_height=int(h / 1.8),
-        slice_width=int(w / 1.8),
+        slice_height=int(h / W),
+        slice_width=int(w / W),
         overlap_width_ratio=0.2,
         overlap_height_ratio=0.2,
     )

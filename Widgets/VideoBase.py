@@ -156,7 +156,7 @@ class VideoBase(QObject):
                 original_imgs.append((np.copy(original_img), thread.camera_port))
 
         # capture images
-        # self.save_raw_info(folder_name='raw_imgs', imgs=original_imgs)
+        self.save_raw_info(folder_name='raw_imgs', imgs=original_imgs)
 
         """
             Whether we need to store images over here, or we could store images on Control Panel, like:
@@ -169,10 +169,10 @@ class VideoBase(QObject):
             One bad thing is that it is not automatic.
         """
 
-        detected_imgs, detected_features = self.detect_images(original_imgs)
-        for key, value in detected_features.items():
-            print(f'{key}: {value}')
-        lot = detected_features['lot']
+        # detected_imgs, detected_features = self.detect_images(original_imgs)
+        # for key, value in detected_features.items():
+        #     print(f'{key}: {value}')
+        # lot = detected_features['lot']
 
         # self.save_info(folder_name=lot, lot=lot, imgs=original_imgs)
         # cv_folder = lot + '_cv'
