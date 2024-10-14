@@ -40,7 +40,7 @@ def init_models():
 
     logo_model_path = os.path.join(model_path, 'logo.pt')
     lot_model_path = os.path.join(model_path, 'lot.pt')
-    defects_model_path = os.path.join(model_path, 'defects.pt')
+    defects_model_path = os.path.join(model_path, 'defects_scr_key.pt')
     serial_region_model_path = os.path.join(model_path, 'region.pt')
     serial_model_path = os.path.join(model_path, 'serial.pt')
 

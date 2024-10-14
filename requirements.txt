@@ -1,5 +1,5 @@
 ipython==8.12.3
-numpy==1.25.2
+numpy~=1.26.4
 Pillow==9.5.0
 plantcv==4.2.1
 PyQt5==5.15.11
