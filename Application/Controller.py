@@ -40,18 +40,22 @@ def init_models():
 
     logo_model_path = os.path.join(model_path, 'logo.pt')
     lot_model_path = os.path.join(model_path, 'lot.pt')
-    defects_model_path = os.path.join(model_path, 'defects_scr_key.pt')
+    top_bottom_model_path = os.path.join(model_path, 'top_bottom.pt')
+    # keyboard_model_path = os.path.join((model_path, 'keyboard.pt'))
+    # screen_model_path = os.path.join((model_path, 'screen.pt'))
+    laptop_model_path = os.path.join(model_path, 'laptop.pt')
     serial_region_model_path = os.path.join(model_path, 'region.pt')
     serial_model_path = os.path.join(model_path, 'serial.pt')
 
-    defects_model = YOLO(defects_model_path)
+    defects_model = YOLO(top_bottom_model_path)
     logo_model = YOLO(logo_model_path)
     lot_model = YOLO(lot_model_path)
     serial_region_model = YOLO(serial_region_model_path)
     serial_model = YOLO(serial_model_path)
+    laptop_model = YOLO(laptop_model_path)
 
-    return {'defects': defects_model, 'logo': logo_model, 'lot': lot_model, 'serial_region': serial_region_model,
-            'serial': serial_model}
+    return {'top_bottom': defects_model, 'logo': logo_model, 'lot': lot_model, 'serial_region': serial_region_model,
+            'serial': serial_model, 'laptop': laptop_model}
 
 
 class Controller(QObject):

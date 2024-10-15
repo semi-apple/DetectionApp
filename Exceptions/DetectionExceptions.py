@@ -57,3 +57,20 @@ class LogoNotFoundException(Exception):
 
     def __str__(self):
         return f'{self.message}'
+
+
+class DetectionException(Exception):
+    """
+    Exception raised for error while detecting
+
+    Attributes:
+        username -- thread that causes error.
+        message -- explanation of the error.
+    """
+
+    def __init__(self, message='Detection Error.'):
+        self.message = message
+        super().__init__(self.message)
+
+    def __str__(self):
+        return f'{self.message}'

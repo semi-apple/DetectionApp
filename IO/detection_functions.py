@@ -36,19 +36,19 @@ from IPython.display import Image
 from ultralytics import YOLO
 
 
-def defects_segment(img):
-    laptop_model_path = '/Users/kunzhou/Desktop/DetectionApp/Models/laptop.pt'
-    laptop_model = YOLO(laptop_model_path)
-
-    region_results = laptop_model(img)
-
-    region_xyxy_list = region_results[0].boxes.xyxy.tolist()[0]
-
-    rx1, ry1, rx2, ry2 = map(int, region_xyxy_list)
-    laptop_region_img = img[ry1: ry2, rx1: rx2]
-
-    model_path = '/Users/kunzhou/Desktop/DetectionApp/Models/potential_defect_models/defects_seg.pt'
-    model = YOLO(model_path)
+def defects_segment(img, model):
+    # laptop_model_path = '/Users/kunzhou/Desktop/DetectionApp/Models/laptop.pt'
+    # laptop_model = YOLO(laptop_model_path)
+    #
+    # region_results = laptop_model(img)
+    #
+    # region_xyxy_list = region_results[0].boxes.xyxy.tolist()[0]
+    #
+    # rx1, ry1, rx2, ry2 = map(int, region_xyxy_list)
+    # laptop_region_img = img[ry1: ry2, rx1: rx2]
+    #
+    # model_path = '/Users/kunzhou/Desktop/DetectionApp/Models/potential_defect_models/defects_seg.pt'
+    # model = YOLO(model_path)
 
     classes = list(model.names.values())
     classes_ids = [classes.index(cls) for cls in classes]
@@ -64,11 +64,11 @@ def defects_segment(img):
     defects_counts = [0, 0, 0, 0, 0]  # list index is defect id. For example, defects_count[0] is the number of chips
     scratch_count, stain_count, chip_count, missing_count, dent_count = 0, 0, 0, 0, 0
 
-    results = model.predict(laptop_region_img, conf=conf, imgsz=1280)
+    results = model.predict(img, conf=conf, imgsz=1280)
     colors = [random.choices(range(256), k=3) for _ in classes_ids]
     # print("Results:", results)
 
-    img_area = laptop_region_img.shape[0] * laptop_region_img.shape[1]
+    img_area = img.shape[0] * img.shape[1]
     stain_area = 0
     try:
         for result in results:
@@ -91,12 +91,12 @@ def defects_segment(img):
 
                 color_number = classes_ids.index(defect_id)
                 color = colors[color_number]
-                cv.polylines(laptop_region_img, [points], isClosed=True, color=color, thickness=2)
+                cv.polylines(img, [points], isClosed=True, color=color, thickness=2)
                 # cv.fillPoly(img, [points], colors[color_number])
 
                 label = f"{classes[defect_id]}: {box.conf[0] * 100:.2f}%"
                 x1, y1, _, _ = map(int, box.xyxy[0])
-                cv.putText(laptop_region_img, label, (x1, y1 - 10), cv.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
+                cv.putText(img, label, (x1, y1 - 10), cv.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
 
         # for result in results:
         #     for boxes in result.boxes:
@@ -113,14 +113,14 @@ def defects_segment(img):
         stain_area_percentage = (stain_area / img_area) * 100 if img_area > 0 else 0
         print(f"Detected {defects_counts[scratch_id]} scratch(es)")
         print(f"Stain area percentage: {stain_area_percentage}%")
-        cv.imshow('Image', laptop_region_img)
+        cv.imshow('Image', img)
         cv.waitKey()
         cv.destroyAllWindows()
-        return laptop_region_img
+        return img
 
     except Exception as e:
         print(f"Error during segmentation: {e}")
-        return laptop_region_img
+        return img
 
 
 def defects_detect(img, model):

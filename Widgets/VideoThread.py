@@ -46,7 +46,7 @@ class VideoThread(QThread):
         # self.run
 
     def run(self):
-        cap = cv.VideoCapture(self.camera_port)
+        cap = cv.VideoCapture(self.camera_port, cv.CAP_DSHOW)
         if cap.isOpened():
             self.running = True
         else:
