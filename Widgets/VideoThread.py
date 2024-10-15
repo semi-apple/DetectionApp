@@ -8,7 +8,6 @@ from PyQt5.QtCore import pyqtSlot
 # from IO.detection_functions import *
 from PyQt5.QtGui import QImage, QPixmap
 from PyQt5.QtCore import Qt, QThread, pyqtSignal
-from ultralytics import YOLO
 import cv2 as cv
 import numpy as np
 
@@ -38,10 +37,9 @@ def update_image(cv_img, label):
 class VideoThread(QThread):
     change_pixmap_signal = pyqtSignal(QImage)
 
-    def __init__(self, camera_port=0, model=None):
+    def __init__(self, camera_port=0):
         super().__init__()
         self.camera_port = camera_port
-        self.model = model
         self.running = True
         # self.run
 
