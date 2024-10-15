@@ -62,7 +62,7 @@ class VideoBase(QObject):
 
     def start_detection(self):
         for i in range(6):
-            thread = VideoThread(i, self.defects_model)
+            thread = VideoThread(i)
             thread.change_pixmap_signal.connect(getattr(self, f'set_image{i}'))
             thread.start()
             self.threads.append(thread)

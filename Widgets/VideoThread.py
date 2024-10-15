@@ -11,6 +11,8 @@ from PyQt5.QtCore import Qt, QThread, pyqtSignal
 from ultralytics import YOLO
 import cv2 as cv
 import numpy as np
+import threading
+import time
 
 from Exceptions.CameraExceptions import CameraInitException
 
@@ -38,43 +40,50 @@ def update_image(cv_img, label):
 class VideoThread(QThread):
     change_pixmap_signal = pyqtSignal(QImage)
 
-    def __init__(self, camera_port=0, model=None):
+    def __init__(self, camera_port=0):
         super().__init__()
         self.camera_port = camera_port
-        self.model = model
         self.running = True
+        self.cap = None
+        self.lock = threading.Lock()
         # self.run
 
     def run(self):
-        cap = cv.VideoCapture(self.camera_port, cv.CAP_DSHOW)
-        if cap.isOpened():
-            self.running = True
-        else:
-            self.running = False
-            print(f'Cannot init camera {self.camera_port}, please make sure the camera is installed correctly.')
-            cap.release()
-            # raise CameraInitException()
+        with self.lock:
+            self.cap = cv.VideoCapture(self.camera_port, cv.CAP_DSHOW)
+            if not self.cap.isOpened():
+                self.running = False
+                print(f'Cannot init camera {self.camera_port}, please make sure the camera is installed correctly.')
+                self.cap.release()
+                return
 
         while self.running:
-            ret, frame = cap.read()
+            with self.lock:
+                ret, frame = self.cap.read()
             if ret:
                 qt_image = convert_cv_qt(frame)
                 self.change_pixmap_signal.emit(qt_image)
             else:
                 print(f'Failed to capture image from camera {self.camera_port}')
                 self.running = False
-        cap.release()
+        
+        with self.lock:
+            self.cap.release()
+            self.cap = None
 
     def capture(self):
-        while self.running:
-            cap = cv.VideoCapture(self.camera_port)
-            ret, frame = cap.read()
-            if ret:
-                cap.release()
-                return frame
+        with self.lock:
+            if not self.running:
+                return None
+            
+            ret, frame = self.cap.read()
+        # cap.release()
+        if ret:
+            return frame
+        else:
+            return None
+        
 
     def stop(self):
         self.running = False
         self.wait()
-
-
