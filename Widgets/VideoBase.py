@@ -11,6 +11,7 @@ import subprocess
 
 from PyQt5.QtCore import QObject, pyqtSlot, Qt, pyqtSignal
 from PyQt5.QtGui import QImage, QPixmap
+from PyQt5.QtWidgets import QFileDialog
 import numpy as np
 
 _Widget_dir = os.path.dirname(os.path.abspath(__file__))
@@ -20,10 +21,7 @@ from Exceptions.DetectionExceptions import (SerialNumberNotFoundException, LotNu
                                             LogoNotFoundException)
 from Exceptions.CameraExceptions import CameraInitException
 from IO.ImageSaver import ImageSaver
-from IO.detection_functions import detect_logo
-from IO.detection_functions import detect_lot
-from IO.detection_functions import defects_detect
-from IO.detection_functions import defects_segment
+from IO.detection_functions import *
 import cv2 as cv
 
 location_id_to_camera_index = {
@@ -81,6 +79,7 @@ class VideoBase(QObject):
         self.logo_model, self.defects_model, self.lot_model, self.serial_region_model, self.serial_model = \
             (models['logo'], models['defects'], models['lot'], models['serial_region'], models['serial'])
         self.image_saver = ImageSaver()
+        self.imgs = []
 
         # usb_info = get_usb_info()
         # location_ids = extract_location_ids(usb_info)
@@ -89,16 +88,51 @@ class VideoBase(QObject):
         self.buttons['capture_button'].clicked.connect(self.capture_images)
         self.buttons['stop_button'].clicked.connect(self.stop_detection)
 
+        # self.selected_imgs = []
+
     def start_detection(self):
-        # i = 1
-        # # if i:
-        # usb_info = get_usb_device_info()
-        # print(usb_info)
-        for i in range(6):
-            thread = VideoThread(i, self.defects_model)
-            thread.change_pixmap_signal.connect(getattr(self, f'set_image{i}'))
-            thread.start()
-            self.threads.append(thread)
+        # for i in range(6):
+        #     thread = VideoThread(i, self.defects_model)
+        #     thread.change_pixmap_signal.connect(getattr(self, f'set_image{i}'))
+        #     thread.start()
+        #     self.threads.append(thread)
+    # ------------------------------------------------------------------------------ #
+        self.select_images()
+
+    def select_images(self):
+        options = QFileDialog.options()
+        options |= QFileDialog.DontUseNativeDialog
+
+        self.top_image_path, _ = QFileDialog.getOpenFileName(None, "Select Top Image", "",
+                                                             "Image Files (*.png *.jpg *.jpeg *.bmp *.gif)",
+                                                             options=options)
+        self.bottom_image_path, _ = QFileDialog.getOpenFileName(None, "Select Bottom Image", "",
+                                                                "Image Files (*.png *.jpg *.jpeg *.bmp *.gif)",
+                                                                options=options)
+        self.keyboard_image_path, _ = QFileDialog.getOpenFileName(None, "Select Keyboard Image", "",
+                                                                  "Image Files (*.png *.jpg *.jpeg *.bmp *.gif)",
+                                                                  options=options)
+        self.screen_image_path, _ = QFileDialog.getOpenFileName(None, "Select Screen Image", "",
+                                                                "Image Files (*.png *.jpg *.jpeg *.bmp *.gif)",
+                                                                options=options)
+
+        if self.top_image_path:
+            self.display_image_on_label(self.top_image_path, self.thread_labels[0])
+        if self.bottom_image_path:
+            self.display_image_on_label(self.bottom_image_path, self.thread_labels[1])
+        if self.keyboard_image_path:
+            self.display_image_on_label(self.keyboard_image_path, self.thread_labels[2])
+        if self.screen_image_path:
+            self.display_image_on_label(self.screen_image_path, self.thread_labels[3])
+
+    def display_image_on_label(self, image_path, label):
+        img = cv.imread(image_path)
+        self.imgs.append(img)
+        img_rgb = cv.cvtColor(img, cv.COLOR_BGR2RGB)
+        h, w, ch = img_rgb.shape
+        bytes_per_line = ch * w
+        q_img = QImage(img_rgb.data, w, h, bytes_per_line, QImage.Format_RGB888)
+        label.setPixmap(QPixmap.fromImage(q_img))
 
     def detect_images(self, original_imgs):
         logo, lot, serial = '', '', ''
@@ -146,17 +180,17 @@ class VideoBase(QObject):
         return detected_imgs, detected_features
 
     def capture_images(self):
-        original_imgs = []
-
-        # set default logo capture camera as 0
-        for thread in self.threads:
-            # if thread.running and thread.camera_port == 1: # on port 0
-            if thread.running:
-                original_img = thread.capture()  # original image
-                original_imgs.append((np.copy(original_img), thread.camera_port))
-
-        # capture images
-        self.save_raw_info(folder_name='raw_imgs', imgs=original_imgs)
+        # original_imgs = []
+        #
+        # # set default logo capture camera as 0
+        # for thread in self.threads:
+        #     # if thread.running and thread.camera_port == 1: # on port 0
+        #     if thread.running:
+        #         original_img = thread.capture()  # original image
+        #         original_imgs.append((np.copy(original_img), thread.camera_port))
+        #
+        # # capture images
+        # self.save_raw_info(folder_name='raw_imgs', imgs=original_imgs)
 
         """
             Whether we need to store images over here, or we could store images on Control Panel, like:
@@ -177,6 +211,44 @@ class VideoBase(QObject):
         # self.save_info(folder_name=lot, lot=lot, imgs=original_imgs)
         # cv_folder = lot + '_cv'
         # self.save_info(folder_name=cv_folder, lot=lot, imgs=detected_imgs)
+
+    # ------------------------------------------------------------------------------ #
+        logo, lot, serial = '', '', ''
+        detected_imgs = []
+        detected_features = {}
+        for i, img in enumerate(self.imgs):
+            if i == 0:  # detect logo and lot number
+                try:
+                    logo = detect_logo(img, self.logo_model)
+                    lot = detect_lot(img, self.lot_model)
+
+                except LogoNotFoundException as e:
+                    print(f'On port {i} -> {e}')
+                    logo = 'Logo_Not_Found'
+
+                except LotNumberNotFoundException as e:
+                    print(f'On port {i} -> {e}')
+                    lot = 'Lot_Not_Found'
+
+                finally:
+                    detected_features['logo'], detected_features['lot'] = logo, lot
+                    print(f'Logo: {logo}, Lot Number: {lot}')
+
+            if i == 1: # detect serial number
+                try:
+                    serial = detect_serial(img, self.serial_region_model, self.serial_model)
+                    print(f'Serial Number: {serial}')
+
+                except SerialNumberNotFoundException as e:
+                    print(f'On port {i} -> {e}')
+                    serial = 'Serial_Not_Found'
+
+                finally:
+                    detected_features['serial'] = serial
+
+            detected_img = defects_segment(i)
+            detected_imgs.append((np.copy(detected_img), i))
+
 
     def stop_detection(self):
         for thread in self.threads:
