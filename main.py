@@ -5,9 +5,7 @@ Author: Kun
 Last Modified: 03 Jul 2024
 """
 import sys
-
 from PyQt5.QtWidgets import QApplication
-
 from Application.DetectionApp import DetectionApp
 from Widgets.Login import LoginWindow
 

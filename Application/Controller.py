@@ -36,22 +36,28 @@ def get_app() -> Optional[QCoreApplication]:
 
 
 def init_models():
+    models = {}
     model_path = os.path.join(_APP_DIR, '../Models')
 
     logo_model_path = os.path.join(model_path, 'logo.pt')
     lot_model_path = os.path.join(model_path, 'lot.pt')
-    defects_model_path = os.path.join(model_path, 'defects.pt')
+    top_bottom_model_path = os.path.join(model_path, 'top_bottom.pt')
     serial_region_model_path = os.path.join(model_path, 'region.pt')
     serial_model_path = os.path.join(model_path, 'serial.pt')
 
-    defects_model = YOLO(defects_model_path)
+    top_bottom_model = YOLO(top_bottom_model_path)
     logo_model = YOLO(logo_model_path)
     lot_model = YOLO(lot_model_path)
     serial_region_model = YOLO(serial_region_model_path)
     serial_model = YOLO(serial_model_path)
 
-    return {'defects': defects_model, 'logo': logo_model, 'lot': lot_model, 'serial_region': serial_region_model,
-            'serial': serial_model}
+    models['top_bottom'] = top_bottom_model
+    models['logo'] = logo_model
+    models['lot'] = lot_model
+    models['serial'] = serial_model
+    models['serial_region'] = serial_region_model
+
+    return models
 
 
 class Controller(QObject):

@@ -23,48 +23,7 @@ from Exceptions.CameraExceptions import CameraInitException
 from IO.ImageSaver import ImageSaver
 from IO.detection_functions import *
 import cv2 as cv
-
-location_id_to_camera_index = {
-    0: "0x01111000",
-    1: "0x01112000",
-    2: "0x01113000",
-    3: "0x01114000",
-    4: "0x01120000",
-    5: "0x01130000",
-}
-
-def get_usb_info():
-    result = subprocess.run(['system_profiler', 'SPUSBDataType'], stdout=subprocess.PIPE)
-    usb_info = result.stdout.decode('utf-8')
-    return usb_info
-
-def extract_location_ids(usb_info):
-    location_ids = []
-    lines = usb_info.split('\n')
-    for line in lines:
-        if 'Location ID:' in line:
-            location_id = line.split('Location ID:')[-1].strip()
-            location_ids.append(location_id)
-    return location_ids
-
-
-def list_available_cameras():
-    index = 0
-    arr = []
-    while True:
-        cap = cv.VideoCapture(index)
-        if not cap.read()[0]:
-            break
-        else:
-            arr.append(index)
-        cap.release()
-        index += 1
-    return arr
-
-
-def get_usb_device_info():
-    result = subprocess.run(['system_profiler', 'SPUSBDataType'], stdout=subprocess.PIPE)
-    return result.stdout.decode('utf-8')
+from Exceptions.DetectionExceptions import *
 
 
 class VideoBase(QObject):
@@ -76,28 +35,29 @@ class VideoBase(QObject):
         self.thread_labels = thread_labels
         self.buttons = buttons
         # self.models = models
-        self.logo_model, self.defects_model, self.lot_model, self.serial_region_model, self.serial_model = \
-            (models['logo'], models['defects'], models['lot'], models['serial_region'], models['serial'])
+        self.init_models(models)
         self.image_saver = ImageSaver()
         self.imgs = []
-
-        # usb_info = get_usb_info()
-        # location_ids = extract_location_ids(usb_info)
 
         self.buttons['detect_button'].clicked.connect(self.start_detection)
         self.buttons['capture_button'].clicked.connect(self.capture_images)
         self.buttons['stop_button'].clicked.connect(self.stop_detection)
 
-        # self.selected_imgs = []
+    def init_models(self, models):
+        self.top_bottom_model = models['top_bottom']
+        self.logo_model = models['logo']
+        self.lot_model = models['lot']
+        self.serial_region_model = models['serial_region']
+        self.serial_model = models['serial']
 
     def start_detection(self):
-        # for i in range(6):
-        #     thread = VideoThread(i, self.defects_model)
-        #     thread.change_pixmap_signal.connect(getattr(self, f'set_image{i}'))
-        #     thread.start()
-        #     self.threads.append(thread)
+        for i in range(6):
+            thread = VideoThread(i)
+            thread.change_pixmap_signal.connect(getattr(self, f'set_image{i}'))
+            thread.start()
+            self.threads.append(thread)
     # ------------------------------------------------------------------------------ #
-        self.select_images()
+    #     self.select_images()
 
     def select_images(self):
         options = QFileDialog.options()
@@ -138,6 +98,7 @@ class VideoBase(QObject):
         logo, lot, serial = '', '', ''
         detected_imgs = []
         detected_features = {}
+        detected_img = None
 
         for original_img, camera_port in original_imgs:
             if original_img is None:
@@ -160,59 +121,53 @@ class VideoBase(QObject):
                     detected_features['logo'], detected_features['lot'] = logo, lot
                     print(f'Logo: {logo}, Lot Number: {lot}')
 
-            # if camera_port == 1:    # detect serial number
-            #     try:
-            #         serial = detect_serial(original_img, self.serial_region_model, self.serial_model)
-            #         print(f'Serial Number: {serial}')
-            #
-            #     except SerialNumberNotFoundException as e:
-            #         print(f'On port {camera_port} -> {e}')
-            #         serial = 'Serial_Not_Found'
-            #
-            #     finally:
-            #         detected_features['serial'] = serial
+                try:
+                    detected_img = segment_with_sahi(original_img, 4, self.top_bottom_model)
 
-            # detected_img = defects_detect(original_img, self.defects_model)
-            detected_img = defects_segment(original_img)
+                except DetectionException as e:
+                    print(f'On port {camera_port} -> {e}')
+                    detected_img = original_img
+
+            if camera_port == 0:    # bottom, detect serial number
+                try:
+                    serial = detect_serial(original_img, self.serial_region_model, self.serial_model)
+                    print(f'Serial Number: {serial}')
+
+                except SerialNumberNotFoundException as e:
+                    print(f'On port {camera_port} -> {e}')
+                    serial = 'Serial_Not_Found'
+
+                finally:
+                    detected_features['serial'] = serial
+
+                try:
+                    detected_img = defects_segment(original_img, self.top_bottom_model)
+
+                except DetectionException as e:
+                    print(f'On port {camera_port} -> {e}')
+                    detected_img = original_img
+
+            if camera_port == 2:  # keyboard
+                try:
+                    detected_img = defects_segment(original_img, self.top_bottom_model) # need to change model later on
+
+                except DetectionException as e:
+                    print(f'On port {camera_port} -> {e}')
+                    detected_img = original_img
+
+            if camera_port == 3:  # screen
+                try:
+                    detected_img = defects_segment(original_img, self.top_bottom_model) # need to change model later on
+
+                except DetectionException as e:
+                    print(f'On port {camera_port} -> {e}')
+                    detected_img = original_img
+
             detected_imgs.append((np.copy(detected_img), camera_port))
-            # detected_imgs.append((np.copy(original_img), camera_port))
 
         return detected_imgs, detected_features
 
-    def capture_images(self):
-        # original_imgs = []
-        #
-        # # set default logo capture camera as 0
-        # for thread in self.threads:
-        #     # if thread.running and thread.camera_port == 1: # on port 0
-        #     if thread.running:
-        #         original_img = thread.capture()  # original image
-        #         original_imgs.append((np.copy(original_img), thread.camera_port))
-        #
-        # # capture images
-        # self.save_raw_info(folder_name='raw_imgs', imgs=original_imgs)
-
-        """
-            Whether we need to store images over here, or we could store images on Control Panel, like:
-            set signal, emit to Control Panel (raw images, cv images, detected features), store images 
-            and detected feature on Control Panel.
-            
-            One good thing to do so is that if there is a detection error occurred, we can store images 
-            with correct info by fixing problem manually.
-             
-            One bad thing is that it is not automatic.
-        """
-
-        # detected_imgs, detected_features = self.detect_images(original_imgs)
-        # for key, value in detected_features.items():
-        #     print(f'{key}: {value}')
-        # lot = detected_features['lot']
-
-        # self.save_info(folder_name=lot, lot=lot, imgs=original_imgs)
-        # cv_folder = lot + '_cv'
-        # self.save_info(folder_name=cv_folder, lot=lot, imgs=detected_imgs)
-
-    # ------------------------------------------------------------------------------ #
+    def capture_selected_images(self):
         logo, lot, serial = '', '', ''
         detected_imgs = []
         detected_features = {}
@@ -234,7 +189,7 @@ class VideoBase(QObject):
                     detected_features['logo'], detected_features['lot'] = logo, lot
                     print(f'Logo: {logo}, Lot Number: {lot}')
 
-            if i == 1: # detect serial number
+            if i == 1:  # detect serial number
                 try:
                     serial = detect_serial(img, self.serial_region_model, self.serial_model)
                     print(f'Serial Number: {serial}')
@@ -246,9 +201,41 @@ class VideoBase(QObject):
                 finally:
                     detected_features['serial'] = serial
 
-            detected_img = defects_segment(i)
+            detected_img = defects_segment(i, self.top_bottom_model)
             detected_imgs.append((np.copy(detected_img), i))
 
+    def capture_images(self):
+        original_imgs = []
+
+        # set default logo capture camera as 0
+        for thread in self.threads:
+            # if thread.running and thread.camera_port == 1: # on port 0
+            if thread.running:
+                original_img = thread.capture()  # original image
+                original_imgs.append((np.copy(original_img), thread.camera_port))
+
+        # capture images
+        # self.save_raw_info(folder_name='raw_imgs', imgs=original_imgs)
+
+        """
+            Whether we need to store images over here, or we could store images on Control Panel, like:
+            set signal, emit to Control Panel (raw images, cv images, detected features), store images 
+            and detected feature on Control Panel.
+            
+            One good thing to do so is that if there is a detection error occurred, we can store images 
+            with correct info by fixing problem manually.
+             
+            One bad thing is that it is not automatic.
+        """
+
+        detected_imgs, detected_features = self.detect_images([np.copy(imgs), port] for imgs, port in original_imgs)
+        # for key, value in detected_features.items():
+        #     print(f'{key}: {value}')
+        # lot = detected_features['lot']
+
+        self.save_raw_info(folder_name='original', imgs=original_imgs)
+        # cv_folder = lot + '_cv'
+        self.save_raw_info(folder_name='detected', imgs=detected_imgs)
 
     def stop_detection(self):
         for thread in self.threads:
