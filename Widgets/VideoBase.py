@@ -40,7 +40,8 @@ class VideoBase(QObject):
         self.imgs = []
 
         self.buttons['detect_button'].clicked.connect(self.start_detection)
-        self.buttons['capture_button'].clicked.connect(self.capture_images)
+        # self.buttons['capture_button'].clicked.connect(self.capture_images)
+        self.buttons['capture_button'].clicked.connect(self.capture_selected_images)
         self.buttons['stop_button'].clicked.connect(self.stop_detection)
 
     def init_models(self, models):
@@ -51,39 +52,43 @@ class VideoBase(QObject):
         self.serial_model = models['serial']
 
     def start_detection(self):
-        for i in range(6):
-            thread = VideoThread(i)
-            thread.change_pixmap_signal.connect(getattr(self, f'set_image{i}'))
-            thread.start()
-            self.threads.append(thread)
+        # for i in range(6):
+        #     thread = VideoThread(i)
+        #     thread.change_pixmap_signal.connect(getattr(self, f'set_image{i}'))
+        #     thread.start()
+        #     self.threads.append(thread)
     # ------------------------------------------------------------------------------ #
-    #     self.select_images()
+        self.select_images()
 
     def select_images(self):
-        options = QFileDialog.options()
+        dialog = QFileDialog()
+        options = dialog.options()
         options |= QFileDialog.DontUseNativeDialog
 
-        self.top_image_path, _ = QFileDialog.getOpenFileName(None, "Select Top Image", "",
-                                                             "Image Files (*.png *.jpg *.jpeg *.bmp *.gif)",
-                                                             options=options)
-        self.bottom_image_path, _ = QFileDialog.getOpenFileName(None, "Select Bottom Image", "",
-                                                                "Image Files (*.png *.jpg *.jpeg *.bmp *.gif)",
-                                                                options=options)
-        self.keyboard_image_path, _ = QFileDialog.getOpenFileName(None, "Select Keyboard Image", "",
-                                                                  "Image Files (*.png *.jpg *.jpeg *.bmp *.gif)",
-                                                                  options=options)
-        self.screen_image_path, _ = QFileDialog.getOpenFileName(None, "Select Screen Image", "",
-                                                                "Image Files (*.png *.jpg *.jpeg *.bmp *.gif)",
-                                                                options=options)
+        # self.top_image_path, _ = QFileDialog.getOpenFileName(None, "Select Top Image", "",
+        #                                                      "Image Files (*.png *.jpg *.jpeg *.bmp *.gif)",
+        #                                                      options=options)
+        # self.bottom_image_path, _ = QFileDialog.getOpenFileName(None, "Select Bottom Image", "",
+        #                                                         "Image Files (*.png *.jpg *.jpeg *.bmp *.gif)",
+        #                                                         options=options)
+        # self.keyboard_image_path, _ = QFileDialog.getOpenFileName(None, "Select Keyboard Image", "",
+        #                                                           "Image Files (*.png *.jpg *.jpeg *.bmp *.gif)",
+        #                                                           options=options)
+        # self.screen_image_path, _ = QFileDialog.getOpenFileName(None, "Select Screen Image", "",
+        #                                                         "Image Files (*.png *.jpg *.jpeg *.bmp *.gif)",
+        #                                                         options=options)
+
+        self.top_image_path = '/Users/kunzhou/Desktop/demo/20240919124947_top.jpg'
+        self.bottom_image_path = '/Users/kunzhou/Desktop/demo/009A9537.JPG'
 
         if self.top_image_path:
             self.display_image_on_label(self.top_image_path, self.thread_labels[0])
         if self.bottom_image_path:
             self.display_image_on_label(self.bottom_image_path, self.thread_labels[1])
-        if self.keyboard_image_path:
-            self.display_image_on_label(self.keyboard_image_path, self.thread_labels[2])
-        if self.screen_image_path:
-            self.display_image_on_label(self.screen_image_path, self.thread_labels[3])
+        # if self.keyboard_image_path:
+        #     self.display_image_on_label(self.keyboard_image_path, self.thread_labels[2])
+        # if self.screen_image_path:
+        #     self.display_image_on_label(self.screen_image_path, self.thread_labels[3])
 
     def display_image_on_label(self, image_path, label):
         img = cv.imread(image_path)
@@ -92,7 +97,10 @@ class VideoBase(QObject):
         h, w, ch = img_rgb.shape
         bytes_per_line = ch * w
         q_img = QImage(img_rgb.data, w, h, bytes_per_line, QImage.Format_RGB888)
-        label.setPixmap(QPixmap.fromImage(q_img))
+        pixmap = QPixmap.fromImage(q_img)
+        label_size = label.size()
+        scaled_pixmap = pixmap.scaled(label_size, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+        label.setPixmap(scaled_pixmap)
 
     def detect_images(self, original_imgs):
         logo, lot, serial = '', '', ''
@@ -201,8 +209,10 @@ class VideoBase(QObject):
                 finally:
                     detected_features['serial'] = serial
 
-            detected_img = defects_segment(i, self.top_bottom_model)
+            detected_img = segment_with_sahi(img, 4, self.top_bottom_model)
             detected_imgs.append((np.copy(detected_img), i))
+
+        return detected_imgs, detected_features
 
     def capture_images(self):
         original_imgs = []

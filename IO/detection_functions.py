@@ -21,6 +21,7 @@ import cv2 as cv
 import numpy as np
 import random
 import pytesseract
+from ultralytics import YOLO
 
 # arrange an instance segmentation model for test
 from sahi.utils.yolov8 import (
@@ -255,15 +256,15 @@ def detect_lot(original_img, ocr_model):
         raise LotNumberNotFoundException()
 
     x1, y1, x2, y2 = map(int, xyxy_list)
-    lot_img = original_img[y1:y2, x1:x2]
+    lot_img = original_img[y1 - 2: y2 + 2, x1 - 2: x2 + 2]
 
     gray_img = cv.cvtColor(lot_img, cv.COLOR_BGR2GRAY)
     high_pass_kernel = np.array([[0, -1, 0],
                                  [-1, 5, -1],
                                  [0, -1, 0]])
 
-    sharpened = cv.filter2D(gray_img, -1, high_pass_kernel)
-    _, thresh = cv.threshold(sharpened, 180, 220, cv.THRESH_BINARY)
+    # sharpened = cv.filter2D(gray_img, -1, high_pass_kernel)
+    _, thresh = cv.threshold(gray_img, 180, 255, cv.THRESH_BINARY + cv.THRESH_OTSU)
     cv.imshow('Lot image', thresh)
     cv.waitKey()
     cv.destroyAllWindows()
@@ -281,24 +282,30 @@ def detect_serial(img, ser_region_model, ser_model):
     region_results = ser_region_model(img)
 
     try:
-        region_xyxy_list = region_results[1].boxes.xyxy.tolist()[0]
+        region_xyxy_list = region_results[0].boxes.xyxy.tolist()[0]
     except Exception as e:
         print('Cannot detect region with serial number, maybe caputre with wrong camera.')
         raise SerialNumberNotFoundException()
 
     rx1, ry1, rx2, ry2 = map(int, region_xyxy_list)
     serial_region_img = img[ry1: ry2, rx1: rx2]
+    # cv.imshow('serial region', serial_region_img)
+    # cv.waitKey()
+    # cv.destroyAllWindows()
 
     serial_results = ser_model(serial_region_img)
 
     try:
-        serial_xyxy_list = serial_results[1].boxes.xyxy.tolist()[0]
+        serial_xyxy_list = serial_results[0].boxes.xyxy.tolist()[0]
     except Exception as e:
         print('Cannot detect region with serial number, maybe caputre with wrong camera.')
         raise SerialNumberNotFoundException()
 
     sx1, sy1, sx2, sy2 = map(int, serial_xyxy_list)
-    serial_img = serial_region_img[sy1: sy2, sx1: sx2]
+    serial_img = serial_region_img[sy1 - 2: sy2 + 2, sx1 - 5: sx2 + 5]
+    # cv.imshow('serial', serial_img)
+    # cv.waitKey()
+    # cv.destroyAllWindows()
 
     gray_img = cv.cvtColor(serial_img, cv.COLOR_BGR2GRAY)
     high_pass_kernel = np.array([[0, -1, 0],
@@ -306,14 +313,20 @@ def detect_serial(img, ser_region_model, ser_model):
                                  [0, -1, 0]])
 
     sharpened = cv.filter2D(gray_img, -1, high_pass_kernel)
-    _, thresh = cv.threshold(sharpened, 180, 220, cv.THRESH_BINARY)
+    _, thresh = cv.threshold(gray_img, 180, 255, cv.THRESH_BINARY + cv.THRESH_OTSU)
+    cv.imshow('serial', thresh)
+    cv.waitKey()
+    cv.destroyAllWindows()
 
     serial = pytesseract.image_to_string(thresh)
+    print(f'serial: {serial}')
 
     return serial
 
 
 if __name__ == "__main__":
-    img = cv.imread('/Users/kunzhou/Desktop/DetectionApp/dataset/1306699/1306699_top.png')
+    img = cv.imread('/Users/kunzhou/Desktop/demo/009A9538.JPG')
+    serial_region_model = YOLO('/Users/kunzhou/Desktop/DetectionApp/Models/region.pt')
+    serial_model = YOLO('/Users/kunzhou/Desktop/DetectionApp/Models/serial.pt')
+    detect_serial(img, serial_region_model, serial_model)
 
-    # segment_defect_test(img)
