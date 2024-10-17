@@ -8,7 +8,6 @@ from PyQt5.QtCore import pyqtSlot
 # from IO.detection_functions import *
 from PyQt5.QtGui import QImage, QPixmap
 from PyQt5.QtCore import Qt, QThread, pyqtSignal
-from ultralytics import YOLO
 import cv2 as cv
 import numpy as np
 import threading
