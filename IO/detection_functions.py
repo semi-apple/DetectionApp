@@ -21,6 +21,7 @@ import cv2 as cv
 import numpy as np
 import random
 import pytesseract
+from ultralytics import YOLO
 
 # arrange an instance segmentation model for test
 from sahi.utils.yolov8 import (
@@ -37,38 +38,31 @@ from ultralytics import YOLO
 
 
 def defects_segment(img, model):
-    # laptop_model_path = '/Users/kunzhou/Desktop/DetectionApp/Models/laptop.pt'
-    # laptop_model = YOLO(laptop_model_path)
-    #
-    # region_results = laptop_model(img)
-    #
-    # region_xyxy_list = region_results[0].boxes.xyxy.tolist()[0]
-    #
-    # rx1, ry1, rx2, ry2 = map(int, region_xyxy_list)
-    # laptop_region_img = img[ry1: ry2, rx1: rx2]
-    #
-    # model_path = '/Users/kunzhou/Desktop/DetectionApp/Models/potential_defect_models/defects_seg.pt'
-    # model = YOLO(model_path)
+    laptop_model_path = '/Users/kunzhou/Desktop/DetectionApp/Models/laptop.pt'
+    laptop_model = YOLO(laptop_model_path)
+    region_results = laptop_model(img)
+    region_xyxy_list = region_results[0].boxes.xyxy.tolist()[0]
+    rx1, ry1, rx2, ry2 = map(int, region_xyxy_list)
+    laptop_region_img = img[ry1: ry2, rx1: rx2]
 
     classes = list(model.names.values())
     classes_ids = [classes.index(cls) for cls in classes]
+    conf = 0.3
 
-    conf = 0.1
-
-    chip_id = classes.index('chip')  # id 0
-    dent_id = classes.index('dent')  # id 1
-    missing_id = classes.index('missing')  # id 2
+    # chip_id = classes.index('chip')  # id 0
+    # dent_id = classes.index('dent')  # id 1
+    # missing_id = classes.index('missing')  # id 2
     scratch_id = classes.index('scratch')  # id 3
     stain_id = classes.index('stain')  # id 4
 
-    defects_counts = [0, 0, 0, 0, 0]  # list index is defect id. For example, defects_count[0] is the number of chips
-    scratch_count, stain_count, chip_count, missing_count, dent_count = 0, 0, 0, 0, 0
+    # defects_counts = [0, 0, 0, 0, 0]  # list index is defect id. For example, defects_count[0] is the number of chips
+    # scratch_count, stain_count, chip_count, missing_count, dent_count = 0, 0, 0, 0, 0
 
-    results = model.predict(img, conf=conf, imgsz=1280)
+    results = model.predict(laptop_region_img, conf=conf, imgsz=1280)
     colors = [random.choices(range(256), k=3) for _ in classes_ids]
     # print("Results:", results)
 
-    img_area = img.shape[0] * img.shape[1]
+    img_area = laptop_region_img.shape[0] * laptop_region_img.shape[1]
     stain_area = 0
     try:
         for result in results:
@@ -76,7 +70,7 @@ def defects_segment(img, model):
                 # print(f"Mask: {mask}")
                 # print(f"Mask shape: {mask.shape}")
                 defect_id = int(box.cls[0])
-                defects_counts[defect_id] += 1
+                # defects_counts[defect_id] += 1
 
                 if mask.size == 0 or len(mask.shape) != 2 or mask.shape[1] != 2:
                     # print("Error: Mask points do not have the correct shape")
@@ -91,12 +85,12 @@ def defects_segment(img, model):
 
                 color_number = classes_ids.index(defect_id)
                 color = colors[color_number]
-                cv.polylines(img, [points], isClosed=True, color=color, thickness=2)
+                cv.polylines(laptop_region_img, [points], isClosed=True, color=color, thickness=2)
                 # cv.fillPoly(img, [points], colors[color_number])
 
                 label = f"{classes[defect_id]}: {box.conf[0] * 100:.2f}%"
                 x1, y1, _, _ = map(int, box.xyxy[0])
-                cv.putText(img, label, (x1, y1 - 10), cv.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
+                cv.putText(laptop_region_img, label, (x1, y1 - 10), cv.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
 
         # for result in results:
         #     for boxes in result.boxes:
@@ -111,16 +105,16 @@ def defects_segment(img, model):
         #         cv.putText(img, label, (x1, y1 - 10), cv.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
 
         stain_area_percentage = (stain_area / img_area) * 100 if img_area > 0 else 0
-        print(f"Detected {defects_counts[scratch_id]} scratch(es)")
+        # print(f"Detected {defects_counts[scratch_id]} scratch(es)")
         print(f"Stain area percentage: {stain_area_percentage}%")
-        cv.imshow('Image', img)
+        cv.imshow('Image', laptop_region_img)
         cv.waitKey()
         cv.destroyAllWindows()
-        return img
+        return laptop_region_img
 
     except Exception as e:
         print(f"Error during segmentation: {e}")
-        return img
+        return laptop_region_img
 
 
 def defects_detect(img, model):
@@ -163,7 +157,7 @@ def defects_detect(img, model):
         return img
 
 
-def segment_with_sahi(original_img, num_blocks):
+def segment_with_sahi(original_img, num_blocks, model):
     laptop_model_path = '/Users/kunzhou/Desktop/DetectionApp/Models/laptop.pt'
     laptop_model = YOLO(laptop_model_path)
 
@@ -172,22 +166,23 @@ def segment_with_sahi(original_img, num_blocks):
     region_xyxy_list = region_results[0].boxes.xyxy.tolist()[0]
 
     rx1, ry1, rx2, ry2 = map(int, region_xyxy_list)
-    laptop_region_img = img[ry1: ry2, rx1: rx2]
+    laptop_region_img = original_img[ry1: ry2, rx1: rx2]
 
-    model_path = '/Users/kunzhou/Desktop/DetectionApp/Models/defects_scr_key_seg.pt'
-    model = YOLO(model_path)
     detection_model_seg = AutoDetectionModel.from_pretrained(
         model_type='yolov8',
-        model_path=model_path,
-        confidence_threshold=0.2,
+        model=model,
+        confidence_threshold=0.3,
         device='cpu',
     )
 
     h = laptop_region_img.shape[0]
     w = laptop_region_img.shape[1]
+    # h = original_img.shape[0]
+    # w = original_img.shape[1]
     W = num_blocks - 0.2 * (num_blocks - 1)
     results = get_sliced_prediction(
         laptop_region_img,
+        # original_img,
         detection_model_seg,
         slice_height=int(h / W),
         slice_width=int(w / W),
@@ -216,20 +211,24 @@ def segment_with_sahi(original_img, num_blocks):
 
             color_number = classes_ids.index(defect_id)
             color = colors[color_number]
+            # cv.polylines(original_img, [points], isClosed=True, color=color, thickness=2)
             cv.polylines(laptop_region_img, [points], isClosed=True, color=color, thickness=2)
             # cv.fillPoly(img, [points], colors[color_number])
 
             label = f"{classes[defect_id]}: {prediction.score.value * 100:.2f}%"
             x1, y1, _, _ = prediction.bbox.to_xyxy()
+            # cv.putText(original_img, label, (x1, y1 - 10), cv.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
             cv.putText(laptop_region_img, label, (x1, y1 - 10), cv.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
 
     stain_area_percentage = (stain_area / img_area) * 100 if img_area > 0 else 0
     print(f"Detected {defects_counts[scratch_id]} scratch(es)")
     print(f"Stain area percentage: {stain_area_percentage}%")
     cv.imshow('Image', laptop_region_img)
+    # cv.imshow('Image', original_img)
     cv.waitKey()
     cv.destroyAllWindows()
     return laptop_region_img
+    # return original_img
 
 
 def detect_logo(original_img, logo_model):
@@ -257,15 +256,15 @@ def detect_lot(original_img, ocr_model):
         raise LotNumberNotFoundException()
 
     x1, y1, x2, y2 = map(int, xyxy_list)
-    lot_img = original_img[y1:y2, x1:x2]
+    lot_img = original_img[y1 - 2: y2 + 2, x1 - 2: x2 + 2]
 
     gray_img = cv.cvtColor(lot_img, cv.COLOR_BGR2GRAY)
     high_pass_kernel = np.array([[0, -1, 0],
                                  [-1, 5, -1],
                                  [0, -1, 0]])
 
-    sharpened = cv.filter2D(gray_img, -1, high_pass_kernel)
-    _, thresh = cv.threshold(sharpened, 180, 220, cv.THRESH_BINARY)
+    # sharpened = cv.filter2D(gray_img, -1, high_pass_kernel)
+    _, thresh = cv.threshold(gray_img, 180, 255, cv.THRESH_BINARY + cv.THRESH_OTSU)
     cv.imshow('Lot image', thresh)
     cv.waitKey()
     cv.destroyAllWindows()
@@ -283,24 +282,30 @@ def detect_serial(img, ser_region_model, ser_model):
     region_results = ser_region_model(img)
 
     try:
-        region_xyxy_list = region_results[1].boxes.xyxy.tolist()[0]
+        region_xyxy_list = region_results[0].boxes.xyxy.tolist()[0]
     except Exception as e:
         print('Cannot detect region with serial number, maybe caputre with wrong camera.')
         raise SerialNumberNotFoundException()
 
     rx1, ry1, rx2, ry2 = map(int, region_xyxy_list)
     serial_region_img = img[ry1: ry2, rx1: rx2]
+    # cv.imshow('serial region', serial_region_img)
+    # cv.waitKey()
+    # cv.destroyAllWindows()
 
     serial_results = ser_model(serial_region_img)
 
     try:
-        serial_xyxy_list = serial_results[1].boxes.xyxy.tolist()[0]
+        serial_xyxy_list = serial_results[0].boxes.xyxy.tolist()[0]
     except Exception as e:
         print('Cannot detect region with serial number, maybe caputre with wrong camera.')
         raise SerialNumberNotFoundException()
 
     sx1, sy1, sx2, sy2 = map(int, serial_xyxy_list)
-    serial_img = serial_region_img[sy1: sy2, sx1: sx2]
+    serial_img = serial_region_img[sy1 - 2: sy2 + 2, sx1 - 5: sx2 + 5]
+    # cv.imshow('serial', serial_img)
+    # cv.waitKey()
+    # cv.destroyAllWindows()
 
     gray_img = cv.cvtColor(serial_img, cv.COLOR_BGR2GRAY)
     high_pass_kernel = np.array([[0, -1, 0],
@@ -308,14 +313,20 @@ def detect_serial(img, ser_region_model, ser_model):
                                  [0, -1, 0]])
 
     sharpened = cv.filter2D(gray_img, -1, high_pass_kernel)
-    _, thresh = cv.threshold(sharpened, 180, 220, cv.THRESH_BINARY)
+    _, thresh = cv.threshold(gray_img, 180, 255, cv.THRESH_BINARY + cv.THRESH_OTSU)
+    cv.imshow('serial', thresh)
+    cv.waitKey()
+    cv.destroyAllWindows()
 
     serial = pytesseract.image_to_string(thresh)
+    print(f'serial: {serial}')
 
     return serial
 
 
 if __name__ == "__main__":
-    img = cv.imread('/Users/kunzhou/Desktop/DetectionApp/dataset/1306699/1306699_top.png')
+    img = cv.imread('/Users/kunzhou/Desktop/demo/009A9538.JPG')
+    serial_region_model = YOLO('/Users/kunzhou/Desktop/DetectionApp/Models/region.pt')
+    serial_model = YOLO('/Users/kunzhou/Desktop/DetectionApp/Models/serial.pt')
+    detect_serial(img, serial_region_model, serial_model)
 
-    # segment_defect_test(img)
