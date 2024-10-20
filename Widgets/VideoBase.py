@@ -40,8 +40,8 @@ class VideoBase(QObject):
         self.imgs = []
 
         self.buttons['detect_button'].clicked.connect(self.start_detection)
-        # self.buttons['capture_button'].clicked.connect(self.capture_images)
-        self.buttons['capture_button'].clicked.connect(self.capture_selected_images)
+        self.buttons['capture_button'].clicked.connect(self.capture_images)
+        # self.buttons['capture_button'].clicked.connect(self.capture_selected_images)
         self.buttons['stop_button'].clicked.connect(self.stop_detection)
 
     def init_models(self, models):
@@ -52,13 +52,13 @@ class VideoBase(QObject):
         self.serial_model = models['serial']
 
     def start_detection(self):
-        # for i in range(6):
-        #     thread = VideoThread(i)
-        #     thread.change_pixmap_signal.connect(getattr(self, f'set_image{i}'))
-        #     thread.start()
-        #     self.threads.append(thread)
+        for i in range(6):
+            thread = VideoThread(i)
+            thread.change_pixmap_signal.connect(getattr(self, f'set_image{i}'))
+            thread.start()
+            self.threads.append(thread)
     # ------------------------------------------------------------------------------ #
-        self.select_images()
+    #     self.select_images()
 
     def select_images(self):
         dialog = QFileDialog()
@@ -225,7 +225,7 @@ class VideoBase(QObject):
                 original_imgs.append((np.copy(original_img), thread.camera_port))
 
         # capture images
-        # self.save_raw_info(folder_name='raw_imgs', imgs=original_imgs)
+        self.save_raw_info(folder_name='raw_imgs', imgs=original_imgs)
 
         """
             Whether we need to store images over here, or we could store images on Control Panel, like:
@@ -238,14 +238,14 @@ class VideoBase(QObject):
             One bad thing is that it is not automatic.
         """
 
-        detected_imgs, detected_features = self.detect_images([np.copy(imgs), port] for imgs, port in original_imgs)
-        # for key, value in detected_features.items():
-        #     print(f'{key}: {value}')
-        # lot = detected_features['lot']
-
-        self.save_raw_info(folder_name='original', imgs=original_imgs)
-        # cv_folder = lot + '_cv'
-        self.save_raw_info(folder_name='detected', imgs=detected_imgs)
+        # detected_imgs, detected_features = self.detect_images([np.copy(imgs), port] for imgs, port in original_imgs)
+        # # for key, value in detected_features.items():
+        # #     print(f'{key}: {value}')
+        # # lot = detected_features['lot']
+        #
+        # self.save_raw_info(folder_name='original', imgs=original_imgs)
+        # # cv_folder = lot + '_cv'
+        # self.save_raw_info(folder_name='detected', imgs=detected_imgs)
 
     def stop_detection(self):
         for thread in self.threads:
