@@ -50,6 +50,7 @@ class VideoBase(QObject):
         self.lot_model = models['lot']
         self.serial_region_model = models['serial_region']
         self.serial_model = models['serial']
+        self.barcode_model = models['barcode']
 
     def start_detection(self):
         # for i in range(6):
@@ -186,6 +187,7 @@ class VideoBase(QObject):
                 try:
                     logo = detect_logo(img, self.logo_model)
                     lot = detect_lot(img, self.lot_model)
+                    detect_barcode(img, self.barcode_model)
 
                 except LogoNotFoundException as e:
                     print(f'On port {i} -> {e}')
@@ -194,6 +196,9 @@ class VideoBase(QObject):
                 except LotNumberNotFoundException as e:
                     print(f'On port {i} -> {e}')
                     lot = 'Lot_Not_Found'
+
+                except BarcodeNotFoundException as e:
+                    print(f'On port {i} -> {e}')
 
                 finally:
                     detected_features['logo'], detected_features['lot'] = logo, lot

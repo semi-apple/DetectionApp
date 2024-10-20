@@ -16,7 +16,7 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from Exceptions.DetectionExceptions import (LotNumberNotFoundException, LogoNotFoundException,
-                                            SerialNumberNotFoundException)
+                                            SerialNumberNotFoundException, BarcodeNotFoundException)
 
 from PIL import Image
 from plantcv import plantcv as pcv
@@ -242,6 +242,22 @@ def segment_with_sahi(original_img, num_blocks, model):
     defects_counts[1] = stain_count
     return detected_img, defects_counts
     # return original_img
+
+
+def detect_barcode(original_img, barcode_model):
+        # detect lot number
+    barcode_results = barcode_model(original_img)
+
+    try:
+        xyxy_list = barcode_results[0].boxes.xyxy[0].tolist()
+    except Exception:
+        raise BarcodeNotFoundException()
+
+    x1, y1, x2, y2 = map(int, xyxy_list)
+    barcode_img = original_img[y1: y2, x1: x2]
+    cv.imshow('Lot image', barcode_img)
+    cv.waitKey()
+    cv.destroyAllWindows()
 
 
 def detect_logo(original_img, logo_model):
