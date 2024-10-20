@@ -182,8 +182,7 @@ def segment_with_sahi(original_img, num_blocks, model):
         device='cuda',
     )
 
-    h = laptop_region_img.shape[0]
-    w = laptop_region_img.shape[1]
+    h, w = laptop_region_img.shape[:2]
     # h = original_img.shape[0]
     # w = original_img.shape[1]
     W = num_blocks - 0.2 * (num_blocks - 1)
@@ -199,10 +198,10 @@ def segment_with_sahi(original_img, num_blocks, model):
     classes = list(model.names.values())
     classes_ids = [classes.index(cls) for cls in classes]
 
-    scratch_id = classes.index('scratch')  # id 3
-    stain_id = classes.index('stain')  # id 4
+    scratch_id = classes.index('scratch')
+    stain_id = classes.index('stain')
 
-    defects_counts = [0, 0]  # list index is defect id. For example, defects_count[0] is the number of chips
+    defects_counts = [0, 0]  # list index is defect id. For example, defects_count[0] is the number of scratches
     scratch_count, stain_count = 0, 0
 
     colors = [random.choices(range(256), k=3) for _ in classes_ids]
@@ -214,7 +213,11 @@ def segment_with_sahi(original_img, num_blocks, model):
             points = np.array(polygon).reshape((-1, 2))
             defect_id = prediction.category.id
             if defect_id == stain_id:
+                stain_count += 1
                 stain_area += cv.contourArea(points)
+
+            if defect_id == scratch_id:
+                scratch_count += 1
 
             color_number = classes_ids.index(defect_id)
             color = colors[color_number]
@@ -235,7 +238,9 @@ def segment_with_sahi(original_img, num_blocks, model):
     # cv.waitKey()
     # cv.destroyAllWindows()
     detected_img = draw_multiple_rectangles(laptop_region_img, 1)
-    return detected_img
+    defects_counts[0] = scratch_count
+    defects_counts[1] = stain_count
+    return detected_img, defects_counts
     # return original_img
 
 

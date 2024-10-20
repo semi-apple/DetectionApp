@@ -180,6 +180,7 @@ class VideoBase(QObject):
         logo, lot, serial = '', '', ''
         detected_imgs = []
         detected_features = {}
+        detected_features['defects'] = []
         for i, img in enumerate(self.imgs):
             if i == 0:  # detect logo and lot number
                 try:
@@ -210,10 +211,11 @@ class VideoBase(QObject):
                 finally:
                     detected_features['serial'] = serial
 
-            detected_img = segment_with_sahi(img, 4, self.top_bottom_model)
+            detected_img, defects_counts = segment_with_sahi(img, 4, self.top_bottom_model)
+            detected_features['defects'].append((defects_counts, i))
             detected_imgs.append((np.copy(detected_img), i))
 
-        return detected_imgs, detected_features
+        self.laptop_info.emit(detected_features)
 
     def capture_images(self):
         original_imgs = []

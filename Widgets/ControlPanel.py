@@ -45,7 +45,7 @@ class PanelBase(QObject):
         super(PanelBase, self).__init__()
         self.input_lines = input_lines
         self.panel_buttons = panel_buttons
-        # self.handle_signal()
+        self.handle_signal()
 
     def handle_signal(self):
         self.panel_buttons['save_button'].clicked.connect(self.save_to_dataset)
@@ -73,23 +73,30 @@ class PanelBase(QObject):
     def clear_all_inputs(self):
         for input_line in self.input_lines.values():
             input_line.clear()
+        print('Clear Info Successful')
 
     @pyqtSlot(dict)
     def set_detected_features(self, detected_features):
-        logo, lot, serial, scratch_count, stain_count = \
-            (detected_features['logo'], detected_features['lot'], detected_features['serial'],
-             detected_features['scratch'], detected_features['stain'])
+        scratch_counts = 0
+        stain_counts = 0
+        for defects_counts, _ in detected_features['defects']:
+            scratch_counts += defects_counts[0]
+            stain_counts += defects_counts[1]
+        logo, lot, serial = \
+            (detected_features['logo'].strip('\n'), detected_features['lot'].strip('\n'), detected_features['serial'].strip('\n'))
 
         self.input_lines['model_input'].setText(logo)
         self.input_lines['lot_number_input'].setText(lot)
-        self.input_lines['scratch_input'].setText(scratch_count)
-        self.input_lines['stain_input'].setText(stain_count)
+        self.input_lines['serial_number_input'].setText(serial)
+        self.input_lines['scratch_input'].setText(str(scratch_counts))
+        self.input_lines['stain_input'].setText(str(stain_counts))
 
-        grade_info = {'scratch': scratch_count, 'stain': stain_count}
+        grade_info = {'scratch': scratch_counts, 'stain': stain_counts}
+        print('Info Update Succeeful')
 
         self.grade(grade_info)
-        self.save_to_dataset()
+        # self.save_to_dataset()
 
     def grade(self, grade_info):
         scratch_count, stain_count = grade_info['scratch'], grade_info['stain']
-        self.input_lines['grade_input'].setText('A')
+        self.input_lines['grade_input'].setText('C')
