@@ -260,7 +260,7 @@ def detect_lot(original_img, ocr_model):
         raise LotNumberNotFoundException()
 
     x1, y1, x2, y2 = map(int, xyxy_list)
-    lot_img = original_img[y1 - 2: y2 + 2, x1 - 2: x2 + 2]
+    lot_img = original_img[y1 - 5: y2 + 5, x1 - 2: x2 + 2]
 
     gray_img = cv.cvtColor(lot_img, cv.COLOR_BGR2GRAY)
     high_pass_kernel = np.array([[0, -1, 0],
@@ -380,9 +380,6 @@ def draw_multiple_rectangles(image, port):
 
 
 if __name__ == "__main__":
-    img = cv.imread('/Users/kunzhou/Desktop/demo/009A9538.JPG')
-    model = YOLO('/Users/kunzhou/Desktop/DetectionApp/Models/top_bottom.pt')
-    detected_img = defects_segment(img, model)
-    cv.imshow('detected', detected_img)
-    cv.waitKey()
-    cv.destroyAllWindows()
+    img = cv.imread('/Users/kunzhou/Desktop/demo/20240919124947_top.jpg')
+    model = YOLO('/Users/kunzhou/Desktop/DetectionApp/Models/lot.pt')
+    detect_lot(img, model)
