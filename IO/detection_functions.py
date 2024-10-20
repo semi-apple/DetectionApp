@@ -40,6 +40,7 @@ from IPython.display import Image
 
 from ultralytics import YOLO
 
+TRANSFER = {1: 'screen', 0: 'top', 2: 'left', 3: 'right', 4: 'screen', 5: 'keyboard'}
 
 
 def defects_segment(img, model):
@@ -112,10 +113,11 @@ def defects_segment(img, model):
         stain_area_percentage = (stain_area / img_area) * 100 if img_area > 0 else 0
         # print(f"Detected {defects_counts[scratch_id]} scratch(es)")
         print(f"Stain area percentage: {stain_area_percentage}%")
-        cv.imshow('Image', laptop_region_img)
-        cv.waitKey()
-        cv.destroyAllWindows()
-        return laptop_region_img
+        # cv.imshow('Image', laptop_region_img)
+        # cv.waitKey()
+        # cv.destroyAllWindows()
+        detected_img = draw_multiple_rectangles(laptop_region_img, 1)
+        return detected_img
 
     except Exception as e:
         print(f"Error during segmentation: {e}")
@@ -228,12 +230,12 @@ def segment_with_sahi(original_img, num_blocks, model):
     stain_area_percentage = (stain_area / img_area) * 100 if img_area > 0 else 0
     print(f"Detected {defects_counts[scratch_id]} scratch(es)")
     print(f"Stain area percentage: {stain_area_percentage}%")
-    resized_img = cv.resize(laptop_region_img, (1280, 860), interpolation=cv.INTER_AREA)
-    cv.imshow('Image', resized_img)
-    # cv.imshow('Image', original_img)
-    cv.waitKey()
-    cv.destroyAllWindows()
-    return laptop_region_img
+    # cv.imshow('Image', laptop_region_img)
+    # # cv.imshow('Image', original_img)
+    # cv.waitKey()
+    # cv.destroyAllWindows()
+    detected_img = draw_multiple_rectangles(laptop_region_img, 1)
+    return detected_img
     # return original_img
 
 
@@ -330,10 +332,61 @@ def detect_serial(img, ser_region_model, ser_model):
     return serial
 
 
-if __name__ == "__main__":
-    img = cv.imread(r'C:\Users\Kun\Desktop\demo\009A9553.JPG')
-    serial_region_model = YOLO(r'C:\Users\Kun\Desktop\DetectionApp\models\region.pt')
-    serial_model = YOLO(r'C:\Users\Kun\Desktop\DetectionApp\models\serial.pt')
-    detect_serial(img, serial_region_model, serial_model)
-    # pass
+def draw_multiple_rectangles(image, port):
+    drawing = False
+    start_point = (-1, -1)
+    rectangles = []
 
+    def draw_rectangle(event, x, y, flags, param):
+        nonlocal drawing, start_point, rectangles
+
+        if event == cv.EVENT_LBUTTONDOWN:
+            drawing = True
+            start_point = (x, y)
+
+        elif event == cv.EVENT_MOUSEMOVE:
+            if drawing:
+                end_point = (x, y)
+                temp_image = image.copy()
+                cv.rectangle(temp_image, start_point, end_point, (0, 255, 0), 2)
+                for rect in rectangles:
+                    cv.rectangle(temp_image, rect[0], rect[1], (0, 255, 0), 2)
+                cv.imshow('Image', temp_image)
+
+        elif event == cv.EVENT_LBUTTONUP:
+            drawing = False
+            end_point = (x, y)
+            rectangles.append((start_point, end_point))
+
+            temp_image = image.copy()
+            for rect in rectangles:
+                cv.rectangle(temp_image, rect[0], rect[1], (0, 255, 0), 2)
+            cv.imshow('Image', temp_image)
+
+    temp_image = image.copy()
+
+    cv.namedWindow('Image')
+    cv.setMouseCallback('Image', draw_rectangle)
+
+    cv.imshow('Image', image)
+
+    while True:
+        key = cv.waitKey(1) & 0xFF
+        if key == ord(' '):
+            break
+
+    cv.destroyAllWindows()
+
+    for rect in rectangles:
+        cv.rectangle(image, rect[0], rect[1], (0, 255, 0), 2)
+
+    return image
+
+
+if __name__ == "__main__":
+    img = cv.imread('/Users/kunzhou/Desktop/demo/009A9538.JPG')
+    model = YOLO('/Users/kunzhou/Desktop/DetectionApp/Models/top_bottom.pt')
+    detected_img = defects_segment(img, model)
+    cv.imshow('detected', detected_img)
+    cv.waitKey()
+    cv.destroyAllWindows()
