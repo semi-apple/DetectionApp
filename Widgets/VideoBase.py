@@ -66,12 +66,12 @@ class VideoBase(QObject):
         options = dialog.options()
         options |= QFileDialog.DontUseNativeDialog
 
-        self.top_image_path, _ = QFileDialog.getOpenFileName(None, "Select Top Image", "",
-                                                             "Image Files (*.png *.jpg *.jpeg *.bmp *.gif)",
-                                                             options=options)
-        self.bottom_image_path, _ = QFileDialog.getOpenFileName(None, "Select Bottom Image", "",
-                                                                "Image Files (*.png *.jpg *.jpeg *.bmp *.gif)",
-                                                                options=options)
+        # self.top_image_path, _ = QFileDialog.getOpenFileName(None, "Select Top Image", "",
+        #                                                      "Image Files (*.png *.jpg *.jpeg *.bmp *.gif)",
+        #                                                      options=options)
+        # self.bottom_image_path, _ = QFileDialog.getOpenFileName(None, "Select Bottom Image", "",
+        #                                                         "Image Files (*.png *.jpg *.jpeg *.bmp *.gif)",
+        #                                                         options=options)
         # self.keyboard_image_path, _ = QFileDialog.getOpenFileName(None, "Select Keyboard Image", "",
         #                                                           "Image Files (*.png *.jpg *.jpeg *.bmp *.gif)",
         #                                                           options=options)
@@ -79,8 +79,8 @@ class VideoBase(QObject):
         #                                                         "Image Files (*.png *.jpg *.jpeg *.bmp *.gif)",
         #                                                         options=options)
 
-        # self.top_image_path = r'C:\Users\Kun\Desktop\demo\20240919124954_top.jpg'
-        # self.bottom_image_path = r'C:\Users\Kun\Desktop\demo\009A9528.JPG'
+        self.top_image_path = r'C:\Users\Kun\Desktop\demo\20240919124954_top.jpg'
+        self.bottom_image_path = r'C:\Users\Kun\Desktop\demo\009A9528.JPG'
 
         if self.top_image_path:
             self.display_image_on_label(self.top_image_path, self.thread_labels[0])

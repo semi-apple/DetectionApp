@@ -264,7 +264,7 @@ def detect_lot(original_img, ocr_model):
         raise LotNumberNotFoundException()
 
     x1, y1, x2, y2 = map(int, xyxy_list)
-    lot_img = original_img[y1 - 2: y2 + 2, x1 - 2: x2 + 2]
+    lot_img = original_img[y1 - 5: y2 + 5, x1 - 2: x2 + 2]
 
     gray_img = cv.cvtColor(lot_img, cv.COLOR_BGR2GRAY)
     high_pass_kernel = np.array([[0, -1, 0],
@@ -272,7 +272,7 @@ def detect_lot(original_img, ocr_model):
                                  [0, -1, 0]])
 
     # sharpened = cv.filter2D(gray_img, -1, high_pass_kernel)
-    _, thresh = cv.threshold(gray_img, 180, 255, cv.THRESH_BINARY + cv.THRESH_OTSU)
+    _, thresh = cv.threshold(gray_img, 150, 200, cv.THRESH_BINARY)
     cv.imshow('Lot image', thresh)
     cv.waitKey()
     cv.destroyAllWindows()
@@ -337,6 +337,11 @@ def draw_multiple_rectangles(image, port):
     start_point = (-1, -1)
     rectangles = []
 
+    target_width = 1280
+    target_height = 860
+
+    image = cv.resize(image, (target_width, target_height))
+
     def draw_rectangle(event, x, y, flags, param):
         nonlocal drawing, start_point, rectangles
 
@@ -384,9 +389,7 @@ def draw_multiple_rectangles(image, port):
 
 
 if __name__ == "__main__":
-    img = cv.imread('/Users/kunzhou/Desktop/demo/009A9538.JPG')
-    model = YOLO('/Users/kunzhou/Desktop/DetectionApp/Models/top_bottom.pt')
-    detected_img = defects_segment(img, model)
-    cv.imshow('detected', detected_img)
-    cv.waitKey()
-    cv.destroyAllWindows()
+    img = cv.imread(r'C:\Users\Kun\Desktop\demo\20240919124954_top.jpg')
+    model = YOLO(r'C:\Users\Kun\Desktop\DetectionApp\models\lot.pt')
+    detected_img = detect_lot(img, model)
+
