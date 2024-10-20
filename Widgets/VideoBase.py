@@ -24,6 +24,7 @@ from IO.ImageSaver import ImageSaver
 from IO.detection_functions import *
 import cv2 as cv
 from Exceptions.DetectionExceptions import *
+from .Selection import SelectionWindow
 
 
 class VideoBase(QObject):
@@ -44,6 +45,26 @@ class VideoBase(QObject):
         # self.buttons['capture_button'].clicked.connect(self.capture_selected_images)
         self.buttons['stop_button'].clicked.connect(self.stop_detection)
 
+    # ---------------------------------------------------------------------------- #
+    #     for i, label in enumerate(self.thread_labels):
+    #         label.mousePressEvent = lambda event, idx=i: self.open_selection_window(idx)
+    #
+    # def open_selection_window(self, idx):
+    #     pixmap = self.get_pixmap_for_label(idx)
+    #     if pixmap:
+    #         self.selection_window = SelectionWindow(pixmap)
+    #         self.selection_window.selected_area.connect(self.on_area_selected)
+    #         self.selection_window.exec_()
+    #
+    # def get_pixmap_for_label(self, idx):
+    #     if idx < len(self.thread_labels):
+    #         return self.thread_labels[idx].pixmap()
+    #     return None
+    #
+    # def on_area_selected(self, rect):
+    #     print(f"Selected Area: {rect}")
+
+# ---------------------------------------------------------------------------- #
     def init_models(self, models):
         self.top_bottom_model = models['top_bottom']
         self.logo_model = models['logo']
@@ -52,13 +73,13 @@ class VideoBase(QObject):
         self.serial_model = models['serial']
 
     def start_detection(self):
-        for i in range(6):
-            thread = VideoThread(i)
-            thread.change_pixmap_signal.connect(getattr(self, f'set_image{i}'))
-            thread.start()
-            self.threads.append(thread)
+        # for i in range(6):
+        #     thread = VideoThread(i)
+        #     thread.change_pixmap_signal.connect(getattr(self, f'set_image{i}'))
+        #     thread.start()
+        #     self.threads.append(thread)
     # ------------------------------------------------------------------------------ #
-    #     self.select_images()
+        self.select_images()
 
     def select_images(self):
         dialog = QFileDialog()
