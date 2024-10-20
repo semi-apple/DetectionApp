@@ -12,6 +12,9 @@ Functions:
 Author: Kun
 Last Modified: 10 Jul 2024
 """
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from Exceptions.DetectionExceptions import (LotNumberNotFoundException, LogoNotFoundException,
                                             SerialNumberNotFoundException)
 
@@ -22,6 +25,7 @@ import numpy as np
 import random
 import pytesseract
 from ultralytics import YOLO
+pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
 
 # arrange an instance segmentation model for test
 from sahi.utils.yolov8 import (
@@ -37,8 +41,9 @@ from IPython.display import Image
 from ultralytics import YOLO
 
 
+
 def defects_segment(img, model):
-    laptop_model_path = '/Users/kunzhou/Desktop/DetectionApp/Models/laptop.pt'
+    laptop_model_path = r'C:\Users\Kun\Desktop\DetectionApp\models\laptop.pt'
     laptop_model = YOLO(laptop_model_path)
     region_results = laptop_model(img)
     region_xyxy_list = region_results[0].boxes.xyxy.tolist()[0]
@@ -158,7 +163,7 @@ def defects_detect(img, model):
 
 
 def segment_with_sahi(original_img, num_blocks, model):
-    laptop_model_path = '/Users/kunzhou/Desktop/DetectionApp/Models/laptop.pt'
+    laptop_model_path = r'C:\Users\Kun\Desktop\DetectionApp\models\laptop.pt'
     laptop_model = YOLO(laptop_model_path)
 
     region_results = laptop_model(original_img)
@@ -172,7 +177,7 @@ def segment_with_sahi(original_img, num_blocks, model):
         model_type='yolov8',
         model=model,
         confidence_threshold=0.3,
-        device='cpu',
+        device='cuda',
     )
 
     h = laptop_region_img.shape[0]
@@ -223,7 +228,8 @@ def segment_with_sahi(original_img, num_blocks, model):
     stain_area_percentage = (stain_area / img_area) * 100 if img_area > 0 else 0
     print(f"Detected {defects_counts[scratch_id]} scratch(es)")
     print(f"Stain area percentage: {stain_area_percentage}%")
-    cv.imshow('Image', laptop_region_img)
+    resized_img = cv.resize(laptop_region_img, (1280, 860), interpolation=cv.INTER_AREA)
+    cv.imshow('Image', resized_img)
     # cv.imshow('Image', original_img)
     cv.waitKey()
     cv.destroyAllWindows()
@@ -302,18 +308,18 @@ def detect_serial(img, ser_region_model, ser_model):
         raise SerialNumberNotFoundException()
 
     sx1, sy1, sx2, sy2 = map(int, serial_xyxy_list)
-    serial_img = serial_region_img[sy1 - 2: sy2 + 2, sx1 - 5: sx2 + 5]
+    serial_img = serial_region_img[sy1 - 5: sy2 + 5, sx1 - 10: sx2 + 10]
     # cv.imshow('serial', serial_img)
     # cv.waitKey()
     # cv.destroyAllWindows()
 
     gray_img = cv.cvtColor(serial_img, cv.COLOR_BGR2GRAY)
-    high_pass_kernel = np.array([[0, -1, 0],
-                                 [-1, 5, -1],
-                                 [0, -1, 0]])
+    # high_pass_kernel = np.array([[0, -1, 0],
+    #                              [-1, 5, -1],
+    #                              [0, -1, 0]])
 
-    sharpened = cv.filter2D(gray_img, -1, high_pass_kernel)
-    _, thresh = cv.threshold(gray_img, 180, 255, cv.THRESH_BINARY + cv.THRESH_OTSU)
+    # sharpened = cv.filter2D(gray_img, -1, high_pass_kernel)
+    _, thresh = cv.threshold(gray_img, 180, 220, cv.THRESH_BINARY + cv.THRESH_OTSU)
     cv.imshow('serial', thresh)
     cv.waitKey()
     cv.destroyAllWindows()
@@ -325,8 +331,9 @@ def detect_serial(img, ser_region_model, ser_model):
 
 
 if __name__ == "__main__":
-    img = cv.imread('/Users/kunzhou/Desktop/demo/009A9538.JPG')
-    serial_region_model = YOLO('/Users/kunzhou/Desktop/DetectionApp/Models/region.pt')
-    serial_model = YOLO('/Users/kunzhou/Desktop/DetectionApp/Models/serial.pt')
+    img = cv.imread(r'C:\Users\Kun\Desktop\demo\009A9553.JPG')
+    serial_region_model = YOLO(r'C:\Users\Kun\Desktop\DetectionApp\models\region.pt')
+    serial_model = YOLO(r'C:\Users\Kun\Desktop\DetectionApp\models\serial.pt')
     detect_serial(img, serial_region_model, serial_model)
+    # pass
 
