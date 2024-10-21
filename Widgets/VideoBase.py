@@ -182,7 +182,9 @@ class VideoBase(QObject):
         detected_imgs = []
         detected_features = {}
         detected_features['defects'] = []
+        original_imgs = []
         for i, img in enumerate(self.imgs):
+            original_imgs.append((np.copy(img), i))
             if i == 0:  # detect logo and lot number
                 try:
                     logo = detect_logo(img, self.logo_model)
@@ -220,6 +222,9 @@ class VideoBase(QObject):
             detected_features['defects'].append((defects_counts, i))
             detected_imgs.append((np.copy(detected_img), i))
 
+        self.save_raw_info(folder_name='original', imgs=original_imgs)
+        # cv_folder = lot + '_cv'
+        self.save_raw_info(folder_name='detected', imgs=detected_imgs)
         self.laptop_info.emit(detected_features)
 
     def capture_images(self):

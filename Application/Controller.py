@@ -43,7 +43,7 @@ def init_models():
     top_bottom_model_path = os.path.join(model_path, 'top_bottom.pt')
     # keyboard_model_path = os.path.join((model_path, 'keyboard.pt'))
     # screen_model_path = os.path.join((model_path, 'screen.pt'))
-    barcode_model_path = os.path.join((model_path, 'barcode.pt'))
+    barcode_model_path = os.path.join(model_path, 'barcode.pt')
     laptop_model_path = os.path.join(model_path, 'laptop.pt')
     serial_region_model_path = os.path.join(model_path, 'region.pt')
     serial_model_path = os.path.join(model_path, 'serial.pt')
