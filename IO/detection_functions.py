@@ -121,16 +121,23 @@ def defects_segment(img, model):
 
 
 def defects_detect(img, model):
+    laptop_model_path = '/Users/kunzhou/Desktop/DetectionApp/Models/laptop.pt'
+    laptop_model = YOLO(laptop_model_path)
+    region_results = laptop_model(img)
+    region_xyxy_list = region_results[0].boxes.xyxy.tolist()[0]
+    rx1, ry1, rx2, ry2 = map(int, region_xyxy_list)
+    img = img[ry1: ry2, rx1: rx2]
+
     classes = list(model.names.values())
     classes_ids = [classes.index(cls) for cls in classes]
 
-    conf = 0.2
+    conf = 0.55
 
-    scratch_id = classes.index('scratch')
-    stain_id = classes.index('stain')
-    chip_id = classes.index('chip')
-    missing_id = classes.index('missing')
-    dent_id = classes.index('dent')
+    # scratch_id = classes.index('scratch')
+    # stain_id = classes.index('stain')
+    # chip_id = classes.index('chip')
+    # missing_id = classes.index('missing')
+    # dent_id = classes.index('dent')
 
     scratch_count, stain_count = 0, 0
 
@@ -174,7 +181,7 @@ def segment_with_sahi(original_img, num_blocks, model):
     detection_model_seg = AutoDetectionModel.from_pretrained(
         model_type='yolov8',
         model=model,
-        confidence_threshold=0.3,
+        confidence_threshold=0.5,
         device='cpu',
     )
 
@@ -234,6 +241,78 @@ def segment_with_sahi(original_img, num_blocks, model):
     return detected_img
     # return original_img
 
+
+def detect_with_sahi(original_img, num_blocks, model):
+    laptop_model_path = '/Users/kunzhou/Desktop/DetectionApp/Models/laptop.pt'
+    laptop_model = YOLO(laptop_model_path)
+
+    # 获取笔记本检测区域
+    region_results = laptop_model(original_img)
+    region_xyxy_list = region_results[0].boxes.xyxy.tolist()[0]
+    rx1, ry1, rx2, ry2 = map(int, region_xyxy_list)
+    laptop_region_img = np.copy(original_img[ry1: ry2, rx1: rx2])
+
+    # 加载用于分割的检测模型
+    detection_model_seg = AutoDetectionModel.from_pretrained(
+        model_type='yolov8',
+        model=model,
+        confidence_threshold=0.4,
+        device='cpu',
+    )
+
+    h, w = laptop_region_img.shape[:2]
+    W = num_blocks - 0.2 * (num_blocks - 1)
+
+    # 分割并预测缺陷区域
+    results = get_sliced_prediction(
+        laptop_region_img,
+        detection_model_seg,
+        slice_height=int(h / W),
+        slice_width=int(w / W),
+        overlap_width_ratio=0.2,
+        overlap_height_ratio=0.2,
+    )
+
+    # classes = list(model.names.values())
+    # scratch_id = classes.index('scratch')
+    # stain_id = classes.index('stain')
+    classes = list(model.names.values())
+    classes_ids = [classes.index(cls) for cls in classes]
+
+    scratch_id = classes.index('scratch')  # id 3
+    stain_id = classes.index('stain')  # id 4
+
+    defects_counts = [0, 0]  # list index is defect id. For example, defects_count[0] is the number of chips
+    scratch_count, stain_count = 0, 0
+
+    colors = [random.choices(range(256), k=3) for _ in classes_ids]
+    img_area = h * w
+    stain_area = 0
+
+    scratch_count, stain_area = 0, 0
+    img_area = h * w
+
+    classes = list(model.names.values())
+    classes_ids = [classes.index(cls) for cls in classes]
+    colors = [random.choices(range(256), k=3) for _ in classes_ids]
+
+    # 遍历结果并绘制缺陷框和标签
+    for prediction in results.object_prediction_list:
+        x1, y1, x2, y2 = map(int, prediction.bbox.to_xyxy())
+        defect_id = prediction.category.id
+        color_number = classes_ids.index(defect_id)
+        color = colors[color_number]
+
+        # 在检测区域上绘制缺陷的矩形框
+        cv.rectangle(laptop_region_img, (x1, y1), (x2, y2), color, 2)
+
+        label = f"{classes[defect_id]}: {prediction.score.value * 100:.2f}%"
+        cv.putText(laptop_region_img, label, (x1, y1 - 10), cv.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
+
+    # 显示检测结果图像
+    cv.imshow('Detection Result', laptop_region_img)
+    cv.waitKey(0)
+    cv.destroyAllWindows()
 
 def detect_logo(original_img, logo_model):
     logo = ''
@@ -380,6 +459,8 @@ def draw_multiple_rectangles(image, port):
 
 
 if __name__ == "__main__":
-    img = cv.imread('/Users/kunzhou/Desktop/demo/20240919124947_top.jpg')
-    model = YOLO('/Users/kunzhou/Desktop/DetectionApp/Models/lot.pt')
-    detect_lot(img, model)
+    img = cv.imread('/Users/kunzhou/Desktop/Detection Project/TrainModel/raw_images/images/image019.jpg')
+    model = YOLO('/Users/kunzhou/Desktop/Detection Project/training/m-p2/train2/weights/best.pt')
+    # segment_with_sahi(img, 4, model)
+    # defects_detect(img, model)
+    detect_with_sahi(img, 2, model)
