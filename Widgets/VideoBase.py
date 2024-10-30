@@ -51,6 +51,8 @@ class VideoBase(QObject):
         self.serial_region_model = models['serial_region']
         self.serial_model = models['serial']
         self.barcode_model = models['barcode']
+        self.keyboard_model = models['keyboard']
+        self.screen_model = models['screen']
 
     def start_detection(self):
         # for i in range(6):
@@ -82,13 +84,14 @@ class VideoBase(QObject):
 
         self.top_image_path = r'C:\Users\Kun\Desktop\demo\20240919124954_top.jpg'
         self.bottom_image_path = r'C:\Users\Kun\Desktop\demo\009A9528.JPG'
+        self.keyboard_image_path = r'C:\Users\Kun\Desktop\demo\keyboard\20241003122528_keyboard.jpg'
 
         if self.top_image_path:
             self.display_image_on_label(self.top_image_path, self.thread_labels[0])
         if self.bottom_image_path:
             self.display_image_on_label(self.bottom_image_path, self.thread_labels[1])
-        # if self.keyboard_image_path:
-        #     self.display_image_on_label(self.keyboard_image_path, self.thread_labels[2])
+        if self.keyboard_image_path:
+            self.display_image_on_label(self.keyboard_image_path, self.thread_labels[2])
         # if self.screen_image_path:
         #     self.display_image_on_label(self.screen_image_path, self.thread_labels[3])
 
