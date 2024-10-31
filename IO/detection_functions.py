@@ -410,7 +410,7 @@ def draw_multiple_rectangles(image, port):
 
 
 if __name__ == "__main__":
-    img = cv.imread(r'C:\Users\Kun\Desktop\demo\20240919124954_top.jpg')
-    model = YOLO(r'C:\Users\Kun\Desktop\DetectionApp\models\lot.pt')
+    img = cv.imread('/Users/kunzhou/Desktop/demo/keyboard/20241003122511_keyboard.jpg')
+    model = YOLO('/Users/kunzhou/Desktop/DetectionApp/Models/keyboard.pt')
     detected_img = detect_lot(img, model)
 
