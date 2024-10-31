@@ -79,12 +79,12 @@ class LoginWindow(QDialog):
         # try:
         #     if username not in USERS:
         #         raise UserNotFoundException(username)
-        #
+        
         #     if USERS[username]['password'] != password:
         #         raise IncorrectPasswordException(username)
-        #
+        
         #     return username, USERS[username]['level']
-        #
+        
         # except Exception as e:
         #     QMessageBox.warning(self, 'Login', str(e))
 

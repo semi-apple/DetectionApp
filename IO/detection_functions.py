@@ -12,8 +12,11 @@ Functions:
 Author: Kun
 Last Modified: 10 Jul 2024
 """
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from Exceptions.DetectionExceptions import (LotNumberNotFoundException, LogoNotFoundException,
-                                            SerialNumberNotFoundException)
+                                            SerialNumberNotFoundException, BarcodeNotFoundException)
 
 from PIL import Image
 from plantcv import plantcv as pcv
@@ -22,6 +25,7 @@ import numpy as np
 import random
 import pytesseract
 from ultralytics import YOLO
+pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
 
 # arrange an instance segmentation model for test
 from sahi.utils.yolov8 import (
@@ -40,7 +44,7 @@ TRANSFER = {1: 'screen', 0: 'top', 2: 'left', 3: 'right', 4: 'screen', 5: 'keybo
 
 
 def defects_segment(img, model):
-    laptop_model_path = '/Users/kunzhou/Desktop/DetectionApp/Models/laptop.pt'
+    laptop_model_path = r'C:\Users\Kun\Desktop\DetectionApp\models\laptop.pt'
     laptop_model = YOLO(laptop_model_path)
     region_results = laptop_model(img)
     region_xyxy_list = region_results[0].boxes.xyxy.tolist()[0]
@@ -121,23 +125,16 @@ def defects_segment(img, model):
 
 
 def defects_detect(img, model):
-    laptop_model_path = '/Users/kunzhou/Desktop/DetectionApp/Models/laptop.pt'
-    laptop_model = YOLO(laptop_model_path)
-    region_results = laptop_model(img)
-    region_xyxy_list = region_results[0].boxes.xyxy.tolist()[0]
-    rx1, ry1, rx2, ry2 = map(int, region_xyxy_list)
-    img = img[ry1: ry2, rx1: rx2]
-
     classes = list(model.names.values())
     classes_ids = [classes.index(cls) for cls in classes]
 
-    conf = 0.55
+    conf = 0.2
 
-    # scratch_id = classes.index('scratch')
-    # stain_id = classes.index('stain')
-    # chip_id = classes.index('chip')
-    # missing_id = classes.index('missing')
-    # dent_id = classes.index('dent')
+    scratch_id = classes.index('scratch')
+    stain_id = classes.index('stain')
+    chip_id = classes.index('chip')
+    missing_id = classes.index('missing')
+    dent_id = classes.index('dent')
 
     scratch_count, stain_count = 0, 0
 
@@ -168,7 +165,7 @@ def defects_detect(img, model):
 
 
 def segment_with_sahi(original_img, num_blocks, model):
-    laptop_model_path = '/Users/kunzhou/Desktop/DetectionApp/Models/laptop.pt'
+    laptop_model_path = r'C:\Users\Kun\Desktop\DetectionApp\models\laptop.pt'
     laptop_model = YOLO(laptop_model_path)
 
     region_results = laptop_model(original_img)
@@ -181,12 +178,11 @@ def segment_with_sahi(original_img, num_blocks, model):
     detection_model_seg = AutoDetectionModel.from_pretrained(
         model_type='yolov8',
         model=model,
-        confidence_threshold=0.5,
-        device='cpu',
+        confidence_threshold=0.3,
+        device='cuda',
     )
 
-    h = laptop_region_img.shape[0]
-    w = laptop_region_img.shape[1]
+    h, w = laptop_region_img.shape[:2]
     # h = original_img.shape[0]
     # w = original_img.shape[1]
     W = num_blocks - 0.2 * (num_blocks - 1)
@@ -202,10 +198,10 @@ def segment_with_sahi(original_img, num_blocks, model):
     classes = list(model.names.values())
     classes_ids = [classes.index(cls) for cls in classes]
 
-    scratch_id = classes.index('scratch')  # id 3
-    stain_id = classes.index('stain')  # id 4
+    scratch_id = classes.index('scratch')
+    stain_id = classes.index('stain')
 
-    defects_counts = [0, 0]  # list index is defect id. For example, defects_count[0] is the number of chips
+    defects_counts = [0, 0]  # list index is defect id. For example, defects_count[0] is the number of scratches
     scratch_count, stain_count = 0, 0
 
     colors = [random.choices(range(256), k=3) for _ in classes_ids]
@@ -217,7 +213,11 @@ def segment_with_sahi(original_img, num_blocks, model):
             points = np.array(polygon).reshape((-1, 2))
             defect_id = prediction.category.id
             if defect_id == stain_id:
+                stain_count += 1
                 stain_area += cv.contourArea(points)
+
+            if defect_id == scratch_id:
+                scratch_count += 1
 
             color_number = classes_ids.index(defect_id)
             color = colors[color_number]
@@ -238,81 +238,27 @@ def segment_with_sahi(original_img, num_blocks, model):
     # cv.waitKey()
     # cv.destroyAllWindows()
     detected_img = draw_multiple_rectangles(laptop_region_img, 1)
-    return detected_img
+    defects_counts[0] = scratch_count
+    defects_counts[1] = stain_count
+    return detected_img, defects_counts
     # return original_img
 
 
-def detect_with_sahi(original_img, num_blocks, model):
-    laptop_model_path = '/Users/kunzhou/Desktop/DetectionApp/Models/laptop.pt'
-    laptop_model = YOLO(laptop_model_path)
+def detect_barcode(original_img, barcode_model):
+        # detect lot number
+    barcode_results = barcode_model(original_img)
 
-    # 获取笔记本检测区域
-    region_results = laptop_model(original_img)
-    region_xyxy_list = region_results[0].boxes.xyxy.tolist()[0]
-    rx1, ry1, rx2, ry2 = map(int, region_xyxy_list)
-    laptop_region_img = np.copy(original_img[ry1: ry2, rx1: rx2])
+    try:
+        xyxy_list = barcode_results[0].boxes.xyxy[0].tolist()
+    except Exception:
+        raise BarcodeNotFoundException()
 
-    # 加载用于分割的检测模型
-    detection_model_seg = AutoDetectionModel.from_pretrained(
-        model_type='yolov8',
-        model=model,
-        confidence_threshold=0.4,
-        device='cpu',
-    )
-
-    h, w = laptop_region_img.shape[:2]
-    W = num_blocks - 0.2 * (num_blocks - 1)
-
-    # 分割并预测缺陷区域
-    results = get_sliced_prediction(
-        laptop_region_img,
-        detection_model_seg,
-        slice_height=int(h / W),
-        slice_width=int(w / W),
-        overlap_width_ratio=0.2,
-        overlap_height_ratio=0.2,
-    )
-
-    # classes = list(model.names.values())
-    # scratch_id = classes.index('scratch')
-    # stain_id = classes.index('stain')
-    classes = list(model.names.values())
-    classes_ids = [classes.index(cls) for cls in classes]
-
-    scratch_id = classes.index('scratch')  # id 3
-    stain_id = classes.index('stain')  # id 4
-
-    defects_counts = [0, 0]  # list index is defect id. For example, defects_count[0] is the number of chips
-    scratch_count, stain_count = 0, 0
-
-    colors = [random.choices(range(256), k=3) for _ in classes_ids]
-    img_area = h * w
-    stain_area = 0
-
-    scratch_count, stain_area = 0, 0
-    img_area = h * w
-
-    classes = list(model.names.values())
-    classes_ids = [classes.index(cls) for cls in classes]
-    colors = [random.choices(range(256), k=3) for _ in classes_ids]
-
-    # 遍历结果并绘制缺陷框和标签
-    for prediction in results.object_prediction_list:
-        x1, y1, x2, y2 = map(int, prediction.bbox.to_xyxy())
-        defect_id = prediction.category.id
-        color_number = classes_ids.index(defect_id)
-        color = colors[color_number]
-
-        # 在检测区域上绘制缺陷的矩形框
-        cv.rectangle(laptop_region_img, (x1, y1), (x2, y2), color, 2)
-
-        label = f"{classes[defect_id]}: {prediction.score.value * 100:.2f}%"
-        cv.putText(laptop_region_img, label, (x1, y1 - 10), cv.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
-
-    # 显示检测结果图像
-    cv.imshow('Detection Result', laptop_region_img)
-    cv.waitKey(0)
+    x1, y1, x2, y2 = map(int, xyxy_list)
+    barcode_img = original_img[y1: y2, x1: x2]
+    cv.imshow('Lot image', barcode_img)
+    cv.waitKey()
     cv.destroyAllWindows()
+
 
 def detect_logo(original_img, logo_model):
     logo = ''
@@ -347,7 +293,7 @@ def detect_lot(original_img, ocr_model):
                                  [0, -1, 0]])
 
     # sharpened = cv.filter2D(gray_img, -1, high_pass_kernel)
-    _, thresh = cv.threshold(gray_img, 180, 255, cv.THRESH_BINARY + cv.THRESH_OTSU)
+    _, thresh = cv.threshold(gray_img, 150, 200, cv.THRESH_BINARY)
     cv.imshow('Lot image', thresh)
     cv.waitKey()
     cv.destroyAllWindows()
@@ -385,18 +331,18 @@ def detect_serial(img, ser_region_model, ser_model):
         raise SerialNumberNotFoundException()
 
     sx1, sy1, sx2, sy2 = map(int, serial_xyxy_list)
-    serial_img = serial_region_img[sy1 - 2: sy2 + 2, sx1 - 5: sx2 + 5]
+    serial_img = serial_region_img[sy1 - 5: sy2 + 5, sx1 - 10: sx2 + 10]
     # cv.imshow('serial', serial_img)
     # cv.waitKey()
     # cv.destroyAllWindows()
 
     gray_img = cv.cvtColor(serial_img, cv.COLOR_BGR2GRAY)
-    high_pass_kernel = np.array([[0, -1, 0],
-                                 [-1, 5, -1],
-                                 [0, -1, 0]])
+    # high_pass_kernel = np.array([[0, -1, 0],
+    #                              [-1, 5, -1],
+    #                              [0, -1, 0]])
 
-    sharpened = cv.filter2D(gray_img, -1, high_pass_kernel)
-    _, thresh = cv.threshold(gray_img, 180, 255, cv.THRESH_BINARY + cv.THRESH_OTSU)
+    # sharpened = cv.filter2D(gray_img, -1, high_pass_kernel)
+    _, thresh = cv.threshold(gray_img, 180, 220, cv.THRESH_BINARY + cv.THRESH_OTSU)
     cv.imshow('serial', thresh)
     cv.waitKey()
     cv.destroyAllWindows()
@@ -411,6 +357,11 @@ def draw_multiple_rectangles(image, port):
     drawing = False
     start_point = (-1, -1)
     rectangles = []
+
+    target_width = 1280
+    target_height = 860
+
+    image = cv.resize(image, (target_width, target_height))
 
     def draw_rectangle(event, x, y, flags, param):
         nonlocal drawing, start_point, rectangles
@@ -459,8 +410,7 @@ def draw_multiple_rectangles(image, port):
 
 
 if __name__ == "__main__":
-    img = cv.imread('/Users/kunzhou/Desktop/Detection Project/TrainModel/raw_images/images/image019.jpg')
-    model = YOLO('/Users/kunzhou/Desktop/Detection Project/training/m-p2/train2/weights/best.pt')
-    # segment_with_sahi(img, 4, model)
-    # defects_detect(img, model)
-    detect_with_sahi(img, 2, model)
+    img = cv.imread(r'C:\Users\Kun\Desktop\demo\20240919124954_top.jpg')
+    model = YOLO(r'C:\Users\Kun\Desktop\DetectionApp\models\lot.pt')
+    detected_img = detect_lot(img, model)
+
