@@ -225,9 +225,9 @@ class VideoBase(QObject):
             detected_features['defects'].append((defects_counts, i))
             detected_imgs.append((np.copy(detected_img), i))
 
-        self.save_raw_info(folder_name='original', imgs=original_imgs)
-        # cv_folder = lot + '_cv'
-        self.save_raw_info(folder_name='detected', imgs=detected_imgs)
+        # self.save_raw_info(folder_name='original', imgs=original_imgs)
+        # # cv_folder = lot + '_cv'
+        # self.save_raw_info(folder_name='detected', imgs=detected_imgs)
         self.laptop_info.emit(detected_features)
 
     def capture_images(self):
@@ -259,9 +259,9 @@ class VideoBase(QObject):
         #     print(f'{key}: {value}')
         # lot = detected_features['lot']
 
-        self.save_raw_info(folder_name='original', imgs=original_imgs)
-        # cv_folder = lot + '_cv'
-        self.save_raw_info(folder_name='detected', imgs=detected_imgs)
+        # self.save_raw_info(folder_name='original', imgs=original_imgs)
+        # # cv_folder = lot + '_cv'
+        # self.save_raw_info(folder_name='detected', imgs=detected_imgs)
 
     def stop_detection(self):
         for thread in self.threads:
