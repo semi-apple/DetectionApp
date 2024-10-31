@@ -41,11 +41,8 @@ def init_models():
     logo_model_path = os.path.join(model_path, 'logo.pt')
     lot_model_path = os.path.join(model_path, 'lot.pt')
     top_bottom_model_path = os.path.join(model_path, 'top_bottom.pt')
-    keyboard_model_path = os.path.join((model_path, 'keyboard.pt'))
-    try: 
-        screen_model_path = os.path.join((model_path, 'screen.pt'))
-    except:
-        screen_model_path = None
+    keyboard_model_path = os.path.join(model_path, 'keyboard.pt')
+    screen_model_path = os.path.join(model_path, 'screen.pt')
     barcode_model_path = os.path.join(model_path, 'barcode.pt')
     laptop_model_path = os.path.join(model_path, 'laptop.pt')
     serial_region_model_path = os.path.join(model_path, 'region.pt')
@@ -59,9 +56,9 @@ def init_models():
     laptop_model = YOLO(laptop_model_path)
     barcode_model = YOLO(barcode_model_path)
     keyboard_model = YOLO(keyboard_model_path)
-    if screen_model_path is not None:
+    try:
         screen_model = YOLO(screen_model_path)
-    else:
+    except:
         screen_model = None
 
     return {'top_bottom': defects_model, 'logo': logo_model, 'lot': lot_model, 'serial_region': serial_region_model,
