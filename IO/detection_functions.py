@@ -164,6 +164,75 @@ def defects_detect(img, model):
         return img
 
 
+def detect_keyboard(original_img, model):
+    # detection_model_seg = AutoDetectionModel.from_pretrained(
+    #     model_type='yolov8',
+    #     model=model,
+    #     confidence_threshold=0.3,
+    #     device='cuda',
+    # )
+
+    # h, w = original_img.shape[:2]
+    # # h = original_img.shape[0]
+    # # w = original_img.shape[1]
+    # W = num_blocks - 0.2 * (num_blocks - 1)
+    # results = get_sliced_prediction(
+    #     original_img,
+    #     # original_img,
+    #     detection_model_seg,
+    #     slice_height=int(h / W),
+    #     slice_width=int(w / W),
+    #     overlap_width_ratio=0.2,
+    #     overlap_height_ratio=0.2,
+    # )
+    conf = 0.5
+    classes = list(model.names.values())
+    classes_ids = [classes.index(cls) for cls in classes]
+
+    # print(f'classes: {classes}')
+    # print(f'classes_ids: {classes_ids}')
+
+    results = model.predict(original_img, conf=conf, imgsz=1280)
+    colors = [random.choices(range(256), k=3) for _ in classes_ids]
+    # print("Results:", results)
+    defects_counts = [0, 0, 0, 0, 0]  # list index is defect id. For example, defects_count[0] is the number of scratches
+
+    img_area = original_img.shape[0] * original_img.shape[1]
+    stain_area = 0
+    for result in results:
+        for mask, box in zip(result.masks.xy, result.boxes):
+            # print(f"Mask: {mask}")
+            # print(f"Mask shape: {mask.shape}")
+            defect_id = int(box.cls[0])
+            defects_counts[defect_id] += 1
+
+            if mask.size == 0 or len(mask.shape) != 2 or mask.shape[1] != 2:
+                # print("Error: Mask points do not have the correct shape")
+                continue
+
+            points = np.int32(mask)
+
+            if classes[defect_id] == 'stain':
+                stain_area += cv.contourArea(points)
+
+            color_number = classes_ids.index(defect_id)
+            color = colors[color_number]
+            cv.polylines(original_img, [points], isClosed=True, color=color, thickness=2)
+            # cv.fillPoly(img, [points], colors[color_number])
+
+            label = f"{classes[defect_id]}: {box.conf[0] * 100:.2f}%"
+            x1, y1, _, _ = map(int, box.xyxy[0])
+            cv.putText(original_img, label, (x1, y1 - 10), cv.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
+
+    # cv.imshow('Image', original_img)
+    # # cv.imshow('Image', original_img)
+    # cv.waitKey()
+    # cv.destroyAllWindows()
+    detected_img = draw_multiple_rectangles(original_img, 1)
+    return detected_img, None
+    # return original_img
+
+
 def segment_with_sahi(original_img, num_blocks, model):
     laptop_model_path = r'C:\Users\Kun\Desktop\DetectionApp\models\laptop.pt'
     laptop_model = YOLO(laptop_model_path)
@@ -255,7 +324,7 @@ def detect_barcode(original_img, barcode_model):
 
     x1, y1, x2, y2 = map(int, xyxy_list)
     barcode_img = original_img[y1: y2, x1: x2]
-    cv.imshow('Lot image', barcode_img)
+    cv.imshow('barcode', barcode_img)
     cv.waitKey()
     cv.destroyAllWindows()
 
@@ -410,7 +479,7 @@ def draw_multiple_rectangles(image, port):
 
 
 if __name__ == "__main__":
-    img = cv.imread(r'C:\Users\Kun\Desktop\demo\20240919124954_top.jpg')
-    model = YOLO(r'C:\Users\Kun\Desktop\DetectionApp\models\lot.pt')
-    detected_img = detect_lot(img, model)
+    img = cv.imread(r'C:\Users\Kun\Desktop\demo\keyboard\20241003122528_keyboard.jpg')
+    model = YOLO(r'C:\Users\Kun\Desktop\DetectionApp\models\keyboard.pt')
+    detected_img = detect_keyboard(img, model)
 
