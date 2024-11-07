@@ -25,6 +25,8 @@ from IO.detection_functions import *
 import cv2 as cv
 from Exceptions.DetectionExceptions import *
 
+TRANSFER = {0: 'top', 1: 'bottom', 2: 'keyboard', 3: 'screen', 4: 'left', 5: 'right'}
+
 
 class VideoBase(QObject):
     laptop_info = pyqtSignal(dict)
@@ -69,22 +71,22 @@ class VideoBase(QObject):
         options = dialog.options()
         options |= QFileDialog.DontUseNativeDialog
 
-        # self.top_image_path, _ = QFileDialog.getOpenFileName(None, "Select Top Image", "",
-        #                                                      "Image Files (*.png *.jpg *.jpeg *.bmp *.gif)",
-        #                                                      options=options)
-        # self.bottom_image_path, _ = QFileDialog.getOpenFileName(None, "Select Bottom Image", "",
-        #                                                         "Image Files (*.png *.jpg *.jpeg *.bmp *.gif)",
-        #                                                         options=options)
-        # self.keyboard_image_path, _ = QFileDialog.getOpenFileName(None, "Select Keyboard Image", "",
-        #                                                           "Image Files (*.png *.jpg *.jpeg *.bmp *.gif)",
-        #                                                           options=options)
+        self.top_image_path, _ = QFileDialog.getOpenFileName(None, "Select Top Image", "",
+                                                             "Image Files (*.png *.jpg *.jpeg *.bmp *.gif)",
+                                                             options=options)
+        self.bottom_image_path, _ = QFileDialog.getOpenFileName(None, "Select Bottom Image", "",
+                                                                "Image Files (*.png *.jpg *.jpeg *.bmp *.gif)",
+                                                                options=options)
+        self.keyboard_image_path, _ = QFileDialog.getOpenFileName(None, "Select Keyboard Image", "",
+                                                                  "Image Files (*.png *.jpg *.jpeg *.bmp *.gif)",
+                                                                  options=options)
         # self.screen_image_path, _ = QFileDialog.getOpenFileName(None, "Select Screen Image", "",
         #                                                         "Image Files (*.png *.jpg *.jpeg *.bmp *.gif)",
         #                                                         options=options)
 
-        self.top_image_path = r'C:\Users\Kun\Desktop\demo\20240919124954_top.jpg'
-        self.bottom_image_path = r'C:\Users\Kun\Desktop\demo\009A9528.JPG'
-        self.keyboard_image_path = r'C:\Users\Kun\Desktop\demo\keyboard\20241003122528_keyboard.jpg'
+        # self.top_image_path = r'C:\Users\Kun\Desktop\demo\20240919124954_top.jpg'
+        # self.bottom_image_path = r'C:\Users\Kun\Desktop\demo\009A9528.JPG'
+        # self.keyboard_image_path = r'C:\Users\Kun\Desktop\demo\keyboard\20241003122511_keyboard.jpg'
 
         if self.top_image_path:
             self.display_image_on_label(self.top_image_path, self.thread_labels[0])
@@ -186,6 +188,7 @@ class VideoBase(QObject):
         detected_features = {}
         detected_features['defects'] = []
         original_imgs = []
+        models_list = [self.top_bottom_model, self.top_bottom_model, self.keyboard_model, self.screen_model]
         for i, img in enumerate(self.imgs):
             original_imgs.append((np.copy(img), i))
             if i == 0:  # detect logo and lot number
@@ -220,14 +223,18 @@ class VideoBase(QObject):
 
                 finally:
                     detected_features['serial'] = serial
-
-            detected_img, defects_counts = segment_with_sahi(img, 4, self.top_bottom_model)
-            detected_features['defects'].append((defects_counts, i))
+            
+            if i == 2:
+                detected_img, defects_counts = detect_keyboard(img, models_list[i])
+            else:
+                detected_img, defects_counts = segment_with_sahi(img, 2, models_list[i])
+            if defects_counts is not None:
+                detected_features['defects'].append((defects_counts, i))
             detected_imgs.append((np.copy(detected_img), i))
 
-        # self.save_raw_info(folder_name='original', imgs=original_imgs)
-        # # cv_folder = lot + '_cv'
-        # self.save_raw_info(folder_name='detected', imgs=detected_imgs)
+        self.save_raw_info(folder_name='original', imgs=original_imgs)
+        # cv_folder = lot + '_cv'
+        self.save_raw_info(folder_name='detected', imgs=detected_imgs)
         self.laptop_info.emit(detected_features)
 
     def capture_images(self):
