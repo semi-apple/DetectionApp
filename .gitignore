@@ -13,6 +13,12 @@ vWindows/
 build/
 dist/
 
+# training results
+runs/
+
+# app
+Detection.app/
+
 # macOS-specific files
 .DS_Store
 
@@ -33,3 +39,6 @@ images/
 # test file
 test.py
 val.py
+
+# Documentations
+Documentation/
