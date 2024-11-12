@@ -29,6 +29,7 @@ from UI.UI import Ui_MainWindow
 import sys
 from ultralytics import YOLO
 from typing import Optional
+import csv
 
 
 def get_app() -> Optional[QCoreApplication]:
@@ -65,6 +66,18 @@ def init_models():
             'serial': serial_model, 'laptop': laptop_model, 'barcode': barcode_model, 'keyboard': keyboard_model, 'screen': screen_model}
 
 
+def check_dataset():
+    root_path = os.path.join(_APP_DIR, '../')
+    dataset_dir_path = os.path.join(root_path, 'Dataset')
+    if not os.path.exists(dataset_dir_path):
+        os.makedirs(dataset_dir_path)
+        dataset_file = os.path.join(dataset_dir_path, 'dataset.csv')
+        fieldnames = ['model', 'serial number', 'lot number', 'grade', 'stain', 'scratch']
+        with open(dataset_file, 'a', newline='', encoding='utf-8') as dataset:
+            writer = csv.DictWriter(dataset, fieldnames=fieldnames)
+            writer.writeheader()
+
+
 class Controller(QObject):
 
     def __init__(self, ui):
@@ -83,6 +96,7 @@ class Controller(QObject):
         self.actionDict = {}
         self.menuBar = None
         self.init_menu_bar()
+        check_dataset()
 
         self.models = init_models()
         self.init_video_base()
