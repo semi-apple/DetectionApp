@@ -1,12 +1,13 @@
 # syntax=docker/dockerfile:1
 
 # set base image to the 22.04 release of Ubuntu
-FROM python:3.10
+FROM python:3.11
 
 # create work dir
 WORKDIR /app
 
 COPY requirements.txt .
+COPY . /app
 
 RUN pip install --upgrade pip setuptools wheel
 
