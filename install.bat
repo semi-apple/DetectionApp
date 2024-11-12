@@ -1,6 +1,6 @@
 REM Activate venv vWindwos
-python -m venv vWindows
-./vWindows/Scripts/activate
+python -m venv venv
+./venv/Scripts/activate
 
 REM Install requirements from requirements.txt
 pip install setuptools
