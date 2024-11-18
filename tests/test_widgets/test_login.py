@@ -10,7 +10,7 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QApplication
 from unittest.mock import patch
 
-from Widgets.Login import LoginWindow
+from widgets.login import LoginWindow
 
 
 class TestLoginWindow(unittest.TestCase):
