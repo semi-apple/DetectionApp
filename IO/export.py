@@ -14,15 +14,13 @@ Author: Kun
 Last Modified: 05 Sep 2024
 """
 import sys
-import threading
-import time
 
-from PyQt5.QtCore import Qt, pyqtSignal, QThread
-from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QDialog, QVBoxLayout, QCalendarWidget, QWidget, \
-    QLabel, QHBoxLayout, QFileDialog, QProgressDialog, QMessageBox
+from PyQt5.QtCore import pyqtSignal, QThread
+from PyQt5.QtWidgets import QApplication, QPushButton, QDialog, QVBoxLayout, QCalendarWidget, \
+    QLabel, QHBoxLayout, QMessageBox
 import os
 
-from .GoogleDriver import GoogleDriveUploader
+from google_driver import GoogleDriveUploader
 
 CLIENT_ID = '382624035870-r0o6a7mrh56mvteieu2g7njubr4r5k07.apps.googleusercontent.com'
 CLIENT_SECRET = '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'

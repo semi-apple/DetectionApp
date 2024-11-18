@@ -27,17 +27,10 @@ Author: Kun
 Last Modified: 10 Jul 2024
 """
 import os
-
-from PyQt5 import QtGui
 from PyQt5.QtCore import Qt, QObject, pyqtSlot
-from PyQt5.QtGui import QPainter
+import csv
 
 _Widget_dir = os.path.dirname(os.path.abspath(__file__))
-
-import csv
-from PyQt5.QtWidgets import QPushButton, QVBoxLayout, QLineEdit, QLabel, QHBoxLayout, QMainWindow, QWidget, QGridLayout, \
-    QSizePolicy, QSpacerItem, QFrame, QGroupBox, QStyleOptionGroupBox, QStyle, QFormLayout
-from PyQt5.QtWidgets import QApplication
 
 
 class PanelBase(QObject):

@@ -11,9 +11,6 @@ from PyQt5.QtCore import Qt, QThread, pyqtSignal
 import cv2 as cv
 import numpy as np
 import threading
-import time
-
-from Exceptions.CameraExceptions import CameraInitException
 
 
 def convert_cv_qt(cv_img):

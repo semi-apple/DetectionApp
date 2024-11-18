@@ -4,26 +4,16 @@ Description: create a window widget to present camera information.
 Author: Kun
 Last Modified: 03 Jul 2024
 """
-import os
-import subprocess
-
-# import sys
-
 from PyQt5.QtCore import QObject, pyqtSlot, Qt, pyqtSignal
 from PyQt5.QtGui import QImage, QPixmap
 from PyQt5.QtWidgets import QFileDialog
-import numpy as np
-
-_Widget_dir = os.path.dirname(os.path.abspath(__file__))
-
-from Widgets.VideoThread import VideoThread
-from Exceptions.DetectionExceptions import (SerialNumberNotFoundException, LotNumberNotFoundException,
-                                            LogoNotFoundException)
-from Exceptions.CameraExceptions import CameraInitException
-from IO.ImageSaver import ImageSaver
+from exceptions.detection_exceptions import (SerialNumberNotFoundException, LotNumberNotFoundException,
+                                             LogoNotFoundException, DetectionException, BarcodeNotFoundException)
+from IO.saver import ImageSaver
 from IO.detection_functions import *
 import cv2 as cv
-from Exceptions.DetectionExceptions import *
+
+_Widget_dir = os.path.dirname(os.path.abspath(__file__))
 
 TRANSFER = {0: 'top', 1: 'bottom', 2: 'keyboard', 3: 'screen', 4: 'left', 5: 'right'}
 
@@ -62,7 +52,7 @@ class VideoBase(QObject):
         #     thread.change_pixmap_signal.connect(getattr(self, f'set_image{i}'))
         #     thread.start()
         #     self.threads.append(thread)
-    # ------------------------------------------------------------------------------ #
+        # ------------------------------------------------------------------------------ #
         self.select_images()
 
     def select_images(self):
@@ -143,7 +133,7 @@ class VideoBase(QObject):
                     print(f'On port {camera_port} -> {e}')
                     detected_img = original_img
 
-            if camera_port == 0:    # bottom, detect serial number
+            if camera_port == 0:  # bottom, detect serial number
                 try:
                     serial = detect_serial(original_img, self.serial_region_model, self.serial_model)
                     print(f'Serial Number: {serial}')
@@ -164,7 +154,7 @@ class VideoBase(QObject):
 
             if camera_port == 2:  # keyboard
                 try:
-                    detected_img = defects_segment(original_img, self.top_bottom_model) # need to change model later on
+                    detected_img = defects_segment(original_img, self.top_bottom_model)  # need to change model later on
 
                 except DetectionException as e:
                     print(f'On port {camera_port} -> {e}')
@@ -172,7 +162,7 @@ class VideoBase(QObject):
 
             if camera_port == 3:  # screen
                 try:
-                    detected_img = defects_segment(original_img, self.top_bottom_model) # need to change model later on
+                    detected_img = defects_segment(original_img, self.top_bottom_model)  # need to change model later on
 
                 except DetectionException as e:
                     print(f'On port {camera_port} -> {e}')
@@ -223,7 +213,7 @@ class VideoBase(QObject):
 
                 finally:
                     detected_features['serial'] = serial
-            
+
             if i == 2:
                 detected_img, defects_counts = detect_keyboard(img, models_list[i])
             else:

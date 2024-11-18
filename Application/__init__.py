@@ -1,5 +1,5 @@
-from .Controller import Controller
-from .DetectionApp import DetectionApp
+from .control import Controller
+from .app import DetectionApp
 
 __all__ = (
     'Controller',

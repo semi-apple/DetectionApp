@@ -1,30 +1,30 @@
 """
 Detection Application Manager
 
-This script provides a GUI application manager using PyQt5, which integrates video detection and a control panel for device management.
-The application displays video detection on one screen and the control panel on another if multiple screens are available.
+This script provides a GUI application manager using PyQt5, which integrates video detection and a control panel for
+device management. The application displays video detection on one screen and the control panel on another if
+multiple screens are available.
 
 Classes:
 - DetectionApp: A QMainWindow-based class that initializes and manages the application windows.
 
-Functions:
-- initUI(): Initializes the main user interface, including menu and exit action.
-- setup_windows(): Sets up the video detection window and control panel window, positioning them based on available screens.
+Functions: - initUI(): Initializes the main user interface, including menu and exit action. - setup_windows(): Sets
+up the video detection window and control panel window, positioning them based on available screens.
 
 
 Author: Kun
-Last Modified: 10 Jul 2024
+Last Modified: 18 Nov 2024
 """
 import os
 
 _APP_DIR = os.path.dirname(os.path.abspath(__file__))
 
-from Widgets.VideoBase import *
-from Widgets.ControlPanel import PanelBase
-from Widgets.MenuBar import BarBase
+from widgets.VideoBase import *
+from widgets.ControlPanel import PanelBase
+from widgets.MenuBar import BarBase
 from PyQt5.QtWidgets import QApplication, QMainWindow
 from PyQt5.QtCore import QCoreApplication, QObject, pyqtSlot
-from IO.ImageSaver import *
+# from IO.saver import ImageSaver
 from UI.UI import Ui_MainWindow
 import sys
 from ultralytics import YOLO
@@ -57,13 +57,14 @@ def init_models():
     laptop_model = YOLO(laptop_model_path)
     barcode_model = YOLO(barcode_model_path)
     keyboard_model = YOLO(keyboard_model_path)
-    try:
+    if os.path.exists(screen_model_path):
         screen_model = YOLO(screen_model_path)
-    except:
+    else:
         screen_model = None
 
     return {'top_bottom': defects_model, 'logo': logo_model, 'lot': lot_model, 'serial_region': serial_region_model,
-            'serial': serial_model, 'laptop': laptop_model, 'barcode': barcode_model, 'keyboard': keyboard_model, 'screen': screen_model}
+            'serial': serial_model, 'laptop': laptop_model, 'barcode': barcode_model, 'keyboard': keyboard_model,
+            'screen': screen_model}
 
 
 def check_dataset():
@@ -79,10 +80,9 @@ def check_dataset():
 
 
 class Controller(QObject):
-
-    def __init__(self, ui):
+    def __init__(self, UI):
         super().__init__()
-        self.ui = ui
+        self.ui = UI
         self.username = ''
         self.level = -1
         self.thread_labels = []
@@ -154,7 +154,7 @@ class Controller(QObject):
     def init_panel_base(self, input_lines):
         for input_line in input_lines:
             name = input_line.objectName()
-            # print(f'Input name: {name}')
+            # print(f"Input name: {name}")
             self.input_lines[name] = input_line
         save_button = getattr(self.ui, 'save_button')
         self.panel_buttons['save_button'] = save_button
@@ -168,9 +168,9 @@ class Controller(QObject):
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    mainwindow = QMainWindow()
+    main_window = QMainWindow()
     ui = Ui_MainWindow()
-    ui.setupUi(mainwindow)
+    ui.setupUi(main_window)
     controller = Controller(ui)
     controller.init_panel_base()
     # sys.exit(app.exec_())

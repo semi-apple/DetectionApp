@@ -5,6 +5,8 @@ Classes:
 - LotNumberNotFoundException: Cannot find lot number while detecting.
 - SerialNumberNotFoundException: Cannot find serial number while detecting.
 - LogoNotFoundException: Cannot find logo while detecting.
+- BarcodeNotFoundException: Cannot find barcode.
+- DetectionException: Error while detecting.
 """
 
 

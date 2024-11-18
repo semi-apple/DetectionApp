@@ -1,7 +1,7 @@
-from .ControlPanel import PanelBase
-from .Login import LoginWindow
-from .VideoBase import VideoBase
-from .VideoThread import VideoThread
+from .panel import PanelBase
+from .login import LoginWindow
+from .video_window import VideoBase
+from .video_thread import VideoThread
 
 __all__ = (
     'PanelBase',

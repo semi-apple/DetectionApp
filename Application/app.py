@@ -1,19 +1,19 @@
 """
 Detection Application Manager
 
-This script provides a GUI application manager using PyQt5, which integrates video detection and a control panel for device management.
-The application displays video detection on one screen and the control panel on another if multiple screens are available.
+This script provides a GUI application manager using PyQt5, which integrates video detection and a control panel for
+device management. The application displays video detection on one screen and the control panel on another if
+multiple screens are available.
 
 Classes:
 - DetectionApp: A QMainWindow-based class that initializes and manages the application windows.
 
-Functions:
-- initUI(): Initializes the main user interface, including menu and exit action.
-- setup_windows(): Sets up the video detection window and control panel window, positioning them based on available screens.
+Functions: - initUI(): Initializes the main user interface, including menu and exit action. - setup_windows(): Sets
+up the video detection window and control panel window, positioning them based on available screens.
 
 
 Author: Kun
-Last Modified: 10 Jul 2024
+Last Modified: 18 Nov 2024
 """
 import os
 import sys
@@ -23,7 +23,7 @@ from PyQt5.QtWidgets import QLineEdit, QApplication, QMainWindow
 
 _APP_DIR = os.path.dirname(os.path.abspath(__file__))
 
-from .Controller import Controller
+from control import Controller
 from UI.UI import Ui_MainWindow
 from typing import Optional
 

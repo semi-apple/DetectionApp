@@ -15,29 +15,18 @@ Last Modified: 10 Jul 2024
 import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from Exceptions.DetectionExceptions import (LotNumberNotFoundException, LogoNotFoundException,
-                                            SerialNumberNotFoundException, BarcodeNotFoundException)
 
-from PIL import Image
-from plantcv import plantcv as pcv
 import cv2 as cv
 import numpy as np
 import random
 import pytesseract
-from ultralytics import YOLO
+from exceptions.detection_exceptions import (LotNumberNotFoundException, LogoNotFoundException,
+                                             SerialNumberNotFoundException, BarcodeNotFoundException)
+
 pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
 
-# arrange an instance segmentation model for test
-from sahi.utils.yolov8 import (
-    download_yolov8s_model, download_yolov8s_seg_model
-)
-
 from sahi import AutoDetectionModel
-from sahi.utils.cv import read_image
-from sahi.utils.file import download_from_url
-from sahi.predict import get_prediction, get_sliced_prediction, predict
-from IPython.display import Image
-
+from sahi.predict import get_sliced_prediction
 from ultralytics import YOLO
 
 TRANSFER = {1: 'screen', 0: 'top', 2: 'left', 3: 'right', 4: 'screen', 5: 'keyboard'}
@@ -195,7 +184,8 @@ def detect_keyboard(original_img, model):
     results = model.predict(original_img, conf=conf, imgsz=1280)
     colors = [random.choices(range(256), k=3) for _ in classes_ids]
     # print("Results:", results)
-    defects_counts = [0, 0, 0, 0, 0]  # list index is defect id. For example, defects_count[0] is the number of scratches
+    defects_counts = [0, 0, 0, 0,
+                      0]  # list index is defect id. For example, defects_count[0] is the number of scratches
 
     img_area = original_img.shape[0] * original_img.shape[1]
     stain_area = 0
@@ -314,7 +304,7 @@ def segment_with_sahi(original_img, num_blocks, model):
 
 
 def detect_barcode(original_img, barcode_model):
-        # detect lot number
+    # detect lot number
     barcode_results = barcode_model(original_img)
 
     try:
@@ -482,4 +472,3 @@ if __name__ == "__main__":
     img = cv.imread(r'C:\Users\Kun\Desktop\demo\keyboard\20241003122528_keyboard.jpg')
     model = YOLO(r'C:\Users\Kun\Desktop\DetectionApp\models\keyboard.pt')
     detected_img = detect_keyboard(img, model)
-

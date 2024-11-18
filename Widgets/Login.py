@@ -21,7 +21,7 @@ import sys
 
 from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtWidgets import QMessageBox, QLabel, QLineEdit, QPushButton, QVBoxLayout, QApplication, QDialog
-from Exceptions.UserLoginException import UserNotFoundException, IncorrectPasswordException
+from exceptions.user_login_exception import UserNotFoundException, IncorrectPasswordException
 
 USERS = {'Admin': {'password': '123456', 'level': 0}, }
 
@@ -73,20 +73,20 @@ class LoginWindow(QDialog):
         # self.close()
 
     def getUserInfo(self):
-        return 'Admin', '123456'
-        # username = self.text_username.text()
-        # password = self.text_password.text()
-        # try:
-        #     if username not in USERS:
-        #         raise UserNotFoundException(username)
+        # return 'Admin', 0
+        username = self.text_username.text()
+        password = self.text_password.text()
+        try:
+            if username not in USERS:
+                raise UserNotFoundException(username)
         
-        #     if USERS[username]['password'] != password:
-        #         raise IncorrectPasswordException(username)
+            if USERS[username]['password'] != password:
+                raise IncorrectPasswordException(username)
         
-        #     return username, USERS[username]['level']
+            return username, USERS[username]['level']
         
-        # except Exception as e:
-        #     QMessageBox.warning(self, 'Login', str(e))
+        except Exception as e:
+            QMessageBox.warning(self, 'Login', str(e))
 
 
 if __name__ == '__main__':

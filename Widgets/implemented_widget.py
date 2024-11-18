@@ -1,8 +1,7 @@
 import sys
 import cv2 as cv
-import numpy as np
 from PyQt5.QtWidgets import QApplication, QColorDialog, QVBoxLayout, QPushButton, QMainWindow, QWidget
-from PyQt5.QtCore import Qt, QPoint
+from PyQt5.QtCore import Qt
 
 
 class ColorToolBar(QWidget):
