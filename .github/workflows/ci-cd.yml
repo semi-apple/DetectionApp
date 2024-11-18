@@ -30,7 +30,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         python -m pip install flake8 pytest
-        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+        if (Test-Path requirements.txt) { pip install -r requirements.txt }
         python -m pip uninstall torch torchvision torchaudio -y
         python -m pip cache purge
         python -m pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu121
@@ -43,3 +43,5 @@ jobs:
     - name: Test with pytest
       run: |
         pytest
+
+#need to change from linux command to windows command
