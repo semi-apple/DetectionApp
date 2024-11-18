@@ -19,12 +19,11 @@ import os
 
 _APP_DIR = os.path.dirname(os.path.abspath(__file__))
 
-from widgets.VideoBase import *
-from widgets.ControlPanel import PanelBase
-from widgets.MenuBar import BarBase
+from widgets.video_window import VideoBase
+from widgets.panel import PanelBase
+from widgets.menubar import BarBase
 from PyQt5.QtWidgets import QApplication, QMainWindow
 from PyQt5.QtCore import QCoreApplication, QObject, pyqtSlot
-# from IO.saver import ImageSaver
 from UI.UI import Ui_MainWindow
 import sys
 from ultralytics import YOLO

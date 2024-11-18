@@ -30,10 +30,13 @@ from sahi.predict import get_sliced_prediction
 from ultralytics import YOLO
 
 TRANSFER = {1: 'screen', 0: 'top', 2: 'left', 3: 'right', 4: 'screen', 5: 'keyboard'}
+script_dir = os.path.dirname(os.path.abspath(__file__))
+print(f'script path: {script_dir}')
+models_dir_path = os.path.join(script_dir, '../models')
 
 
 def defects_segment(img, model):
-    laptop_model_path = r'C:\Users\Kun\Desktop\DetectionApp\models\laptop.pt'
+    laptop_model_path = os.path.join(models_dir_path, 'laptop.pt')
     laptop_model = YOLO(laptop_model_path)
     region_results = laptop_model(img)
     region_xyxy_list = region_results[0].boxes.xyxy.tolist()[0]
@@ -224,7 +227,7 @@ def detect_keyboard(original_img, model):
 
 
 def segment_with_sahi(original_img, num_blocks, model):
-    laptop_model_path = r'C:\Users\Kun\Desktop\DetectionApp\models\laptop.pt'
+    laptop_model_path = os.path.join(models_dir_path, 'laptop.pt')
     laptop_model = YOLO(laptop_model_path)
 
     region_results = laptop_model(original_img)

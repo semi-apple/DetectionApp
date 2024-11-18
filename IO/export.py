@@ -20,7 +20,7 @@ from PyQt5.QtWidgets import QApplication, QPushButton, QDialog, QVBoxLayout, QCa
     QLabel, QHBoxLayout, QMessageBox
 import os
 
-from google_driver import GoogleDriveUploader
+from .google_driver import GoogleDriveUploader
 
 CLIENT_ID = '382624035870-r0o6a7mrh56mvteieu2g7njubr4r5k07.apps.googleusercontent.com'
 CLIENT_SECRET = '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'

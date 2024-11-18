@@ -23,7 +23,7 @@ from PyQt5.QtWidgets import QLineEdit, QApplication, QMainWindow
 
 _APP_DIR = os.path.dirname(os.path.abspath(__file__))
 
-from control import Controller
+from .control import Controller
 from UI.UI import Ui_MainWindow
 from typing import Optional
 

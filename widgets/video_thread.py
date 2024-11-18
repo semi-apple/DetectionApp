@@ -46,7 +46,8 @@ class VideoThread(QThread):
 
     def run(self):
         with self.lock:
-            self.cap = cv.VideoCapture(self.camera_port, cv.CAP_DSHOW)
+            self.cap = cv.VideoCapture(self.camera_port)
+            # self.cap = cv.VideoCapture(self.camera_port, cv.CAP_DSHOW)
             if not self.cap.isOpened():
                 self.running = False
                 print(f'Cannot init camera {self.camera_port}, please make sure the camera is installed correctly.')

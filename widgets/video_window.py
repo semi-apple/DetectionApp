@@ -7,10 +7,10 @@ Last Modified: 03 Jul 2024
 from PyQt5.QtCore import QObject, pyqtSlot, Qt, pyqtSignal
 from PyQt5.QtGui import QImage, QPixmap
 from PyQt5.QtWidgets import QFileDialog
-from exceptions.detection_exceptions import (SerialNumberNotFoundException, LotNumberNotFoundException,
-                                             LogoNotFoundException, DetectionException, BarcodeNotFoundException)
+from exceptions.detection_exceptions import DetectionException
 from IO.saver import ImageSaver
 from IO.detection_functions import *
+from .video_thread import VideoThread
 import cv2 as cv
 
 _Widget_dir = os.path.dirname(os.path.abspath(__file__))
@@ -64,12 +64,12 @@ class VideoBase(QObject):
         self.top_image_path, _ = QFileDialog.getOpenFileName(None, "Select Top Image", "",
                                                              "Image Files (*.png *.jpg *.jpeg *.bmp *.gif)",
                                                              options=options)
-        self.bottom_image_path, _ = QFileDialog.getOpenFileName(None, "Select Bottom Image", "",
-                                                                "Image Files (*.png *.jpg *.jpeg *.bmp *.gif)",
-                                                                options=options)
-        self.keyboard_image_path, _ = QFileDialog.getOpenFileName(None, "Select Keyboard Image", "",
-                                                                  "Image Files (*.png *.jpg *.jpeg *.bmp *.gif)",
-                                                                  options=options)
+        # self.bottom_image_path, _ = QFileDialog.getOpenFileName(None, "Select Bottom Image", "",
+        #                                                         "Image Files (*.png *.jpg *.jpeg *.bmp *.gif)",
+        #                                                         options=options)
+        # self.keyboard_image_path, _ = QFileDialog.getOpenFileName(None, "Select Keyboard Image", "",
+        #                                                           "Image Files (*.png *.jpg *.jpeg *.bmp *.gif)",
+        #                                                           options=options)
         # self.screen_image_path, _ = QFileDialog.getOpenFileName(None, "Select Screen Image", "",
         #                                                         "Image Files (*.png *.jpg *.jpeg *.bmp *.gif)",
         #                                                         options=options)
@@ -80,10 +80,10 @@ class VideoBase(QObject):
 
         if self.top_image_path:
             self.display_image_on_label(self.top_image_path, self.thread_labels[0])
-        if self.bottom_image_path:
-            self.display_image_on_label(self.bottom_image_path, self.thread_labels[1])
-        if self.keyboard_image_path:
-            self.display_image_on_label(self.keyboard_image_path, self.thread_labels[2])
+        # if self.bottom_image_path:
+        #     self.display_image_on_label(self.bottom_image_path, self.thread_labels[1])
+        # if self.keyboard_image_path:
+        #     self.display_image_on_label(self.keyboard_image_path, self.thread_labels[2])
         # if self.screen_image_path:
         #     self.display_image_on_label(self.screen_image_path, self.thread_labels[3])
 
@@ -222,10 +222,10 @@ class VideoBase(QObject):
                 detected_features['defects'].append((defects_counts, i))
             detected_imgs.append((np.copy(detected_img), i))
 
-        self.save_raw_info(folder_name='original', imgs=original_imgs)
-        # cv_folder = lot + '_cv'
-        self.save_raw_info(folder_name='detected', imgs=detected_imgs)
-        self.laptop_info.emit(detected_features)
+        # self.save_raw_info(folder_name='original', imgs=original_imgs)
+        # # cv_folder = lot + '_cv'
+        # self.save_raw_info(folder_name='detected', imgs=detected_imgs)
+        # self.laptop_info.emit(detected_features)
 
     def capture_images(self):
         original_imgs = []
