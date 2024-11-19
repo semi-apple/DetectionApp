@@ -45,12 +45,14 @@ class TestLoginWindow(unittest.TestCase):
         self.assertIsNotNone(self.login.text_password, 'Password text should exist.')
         self.assertIsNotNone(self.login.button_login, 'Login button should exist.')
 
-    def test_login_successful(self):
+    @patch('PyQt5.QtWidgets.QMessageBox.information')
+    def test_login_successful(self, mock_information):
         """Test a successful login scenario"""
         QTest.keyClicks(self.login.text_username, 'Admin')
         QTest.keyClicks(self.login.text_password, '123456')
         QTest.mouseClick(self.login.button_login, Qt.LeftButton)
 
+        mock_information.assert_called_once_with(self.login, 'Login Successful!', 'Welcome, Admin!')
         self.assertTrue(self.login_success, 'Login should be successful')
         self.assertEqual(self.username_received, 'Admin', 'Username should match input')
         self.assertEqual(self.user_level_received, 0, "User level should match Admin's level")
