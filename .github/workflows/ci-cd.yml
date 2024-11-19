@@ -5,11 +5,11 @@ name: Python package
 
 on:
   push:
-#    branches: [ "main" ]
     branches: [ "windows" ]
+    paths:
+      - 'test/**'
   pull_request:
     branches: [ "windows" ]
-#    branches: [ "main" ]
 
 jobs:
   build:

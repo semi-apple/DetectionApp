@@ -44,7 +44,6 @@ val.py
 documentation/cocodataset/test/*.jpg
 documentation/*.pdf
 documentation/training_results/
-documentation/images
 
 # dataset
 dataset/
