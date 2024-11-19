@@ -40,8 +40,9 @@ images/
 test.py
 val.py
 
-# Documentations
-documentation/
+# images and pdf in documentations
+documentation/cocodataset/test/*.jpg
+documentation/*.pdf
 
 # dataset
 dataset/
