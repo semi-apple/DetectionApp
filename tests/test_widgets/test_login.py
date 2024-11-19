@@ -10,6 +10,12 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QApplication
 from unittest.mock import patch
 
+import os
+import sys
+current_dir = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.abspath(os.path.join(current_dir, '../../'))
+sys.path.append(project_root)
+
 from widgets.login import LoginWindow
 
 
@@ -49,7 +55,7 @@ class TestLoginWindow(unittest.TestCase):
         self.assertEqual(self.username_received, 'Admin', 'Username should match input')
         self.assertEqual(self.user_level_received, 0, "User level should match Admin's level")
 
-    @patch('Widgets.Login.QMessageBox.warning')
+    @patch('widgets.login.QMessageBox.warning')
     def test_login_failed_wrong_password(self, mock_warning):
         """Test login failure due to incorrect password"""
         QTest.keyClicks(self.login.text_username, 'Admin')
@@ -59,7 +65,7 @@ class TestLoginWindow(unittest.TestCase):
         self.assertFalse(self.login_success, 'Login should fail with incorrect password')
         mock_warning.assert_called_once_with(self.login, 'Login', 'Admin -> Incorrect password! Please try again.')
 
-    @patch('Widgets.Login.QMessageBox.warning')
+    @patch('widgets.login.QMessageBox.warning')
     def test_login_failed_user_not_found(self, mock_warning):
         """Test login failure due to incorrect password"""
         QTest.keyClicks(self.login.text_username, 'UnknownUser')
