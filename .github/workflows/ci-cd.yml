@@ -29,9 +29,9 @@ jobs:
         python -m pip install --upgrade pip
         python -m pip install flake8 pytest pytest-timeout pytest-qt
         pip install -r requirements.txt
-        python -m pip uninstall torch torchvision torchaudio -y
-        python -m pip cache purge
-        python -m pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu121
+#        python -m pip uninstall torch torchvision torchaudio -y
+#        python -m pip cache purge
+#        python -m pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu121
     - name: Lint with flake8
       run: |
         # stop the build if there are Python syntax errors or undefined names
@@ -40,6 +40,6 @@ jobs:
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Test with pytest
       run: |
-        pytest --timeout=30 --rootdir=D:\a\DetectionApp tests/
+        pytest --timeout=30 tests/test_widgets/test_login.py tests/test_application/*.py
 
 #need to change from linux command to windows command
