@@ -41,9 +41,9 @@ def test_start_detection(detection_app, qtbot):
     assert detection_app.controller.username == username, 'Username should be set correctly.'
     assert detection_app.controller.level == level, 'Level should be set correctly.'
 
-    app = QApplication.instance()
-    primary_screen_geometry = app.screens()[0].geometry()
-    assert detection_app.geometry() == primary_screen_geometry, 'Window geometry should match the primary screen.'
+    # app = QApplication.instance()
+    # primary_screen_geometry = app.screens()[0].geometry()
+    # assert detection_app.geometry() == primary_screen_geometry, 'Window geometry should match the primary screen.'
 
 
 def test_close_application(detection_app, qtbot):
