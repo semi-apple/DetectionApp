@@ -18,6 +18,7 @@ Last Modified: 18 Nov 2024
 import os
 import sys
 
+from PyQt5.QtCore import Qt
 from PyQt5.QtCore import QCoreApplication, pyqtSignal
 from PyQt5.QtWidgets import QLineEdit, QApplication, QMainWindow
 
@@ -52,6 +53,7 @@ class DetectionApp(QMainWindow):
         if username is not None and level is not None:
             self.controller.username = username
             self.controller.level = level
+            self.setWindowFlags(Qt.FramelessWindowHint)
             self.setGeometry(get_app().screens()[0].geometry())
             self.show()
 

@@ -67,7 +67,7 @@ def init_models():
 
 
 def check_dataset():
-    root_path = os.path.join(_APP_DIR, '../')
+    root_path = os.path.abspath(os.path.join(_APP_DIR, '..'))
     dataset_dir_path = os.path.join(root_path, 'Dataset')
     if not os.path.exists(dataset_dir_path):
         os.makedirs(dataset_dir_path)
@@ -107,9 +107,13 @@ class Controller(QObject):
 
     def init_menu_bar(self):
         actionOpenFile = getattr(self.ui, 'actionOpenFile')
+        # if actionOpenFile.parent() is None:
+        #     actionOpenFile.setParent(self.ui.main_window)
         self.actionDict['openFile'] = actionOpenFile
 
         actionExitApp = getattr(self.ui, 'actionExitApp')
+        # if actionExitApp.parent() is None:
+        #     actionExitApp.setParent(self.ui.main_window)
         self.actionDict['exitApp'] = actionExitApp
 
         actionOpenDatabase = getattr(self.ui, 'actionOpenDatabase')

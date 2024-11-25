@@ -41,6 +41,9 @@ class PanelBase(QObject):
         self.handle_signal()
 
     def handle_signal(self):
+        assert 'save_button' in self.panel_buttons
+        assert 'clear_button' in self.panel_buttons
+
         self.panel_buttons['save_button'].clicked.connect(self.save_to_dataset)
         self.panel_buttons['clear_button'].clicked.connect(self.clear_all_inputs)
 
