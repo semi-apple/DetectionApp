@@ -1,7 +1,12 @@
 import pytest
 from PyQt5.QtWidgets import QLineEdit, QApplication
-from PyQt5.QtCore import Qt
 from application import DetectionApp
+
+import os
+import sys
+current_dir = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.abspath(os.path.join(current_dir, '../../'))
+sys.path.append(project_root)
 
 
 @pytest.fixture(scope='module')
