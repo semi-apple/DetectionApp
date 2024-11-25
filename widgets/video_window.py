@@ -64,12 +64,12 @@ class VideoBase(QObject):
         self.top_image_path, _ = QFileDialog.getOpenFileName(None, "Select Top Image", "",
                                                              "Image Files (*.png *.jpg *.jpeg *.bmp *.gif)",
                                                              options=options)
-        # self.bottom_image_path, _ = QFileDialog.getOpenFileName(None, "Select Bottom Image", "",
-        #                                                         "Image Files (*.png *.jpg *.jpeg *.bmp *.gif)",
-        #                                                         options=options)
-        # self.keyboard_image_path, _ = QFileDialog.getOpenFileName(None, "Select Keyboard Image", "",
-        #                                                           "Image Files (*.png *.jpg *.jpeg *.bmp *.gif)",
-        #                                                           options=options)
+        self.bottom_image_path, _ = QFileDialog.getOpenFileName(None, "Select Bottom Image", "",
+                                                                "Image Files (*.png *.jpg *.jpeg *.bmp *.gif)",
+                                                                options=options)
+        self.keyboard_image_path, _ = QFileDialog.getOpenFileName(None, "Select Keyboard Image", "",
+                                                                  "Image Files (*.png *.jpg *.jpeg *.bmp *.gif)",
+                                                                  options=options)
         # self.screen_image_path, _ = QFileDialog.getOpenFileName(None, "Select Screen Image", "",
         #                                                         "Image Files (*.png *.jpg *.jpeg *.bmp *.gif)",
         #                                                         options=options)
@@ -80,10 +80,10 @@ class VideoBase(QObject):
 
         if self.top_image_path:
             self.display_image_on_label(self.top_image_path, self.thread_labels[0])
-        # if self.bottom_image_path:
-        #     self.display_image_on_label(self.bottom_image_path, self.thread_labels[1])
-        # if self.keyboard_image_path:
-        #     self.display_image_on_label(self.keyboard_image_path, self.thread_labels[2])
+        if self.bottom_image_path:
+            self.display_image_on_label(self.bottom_image_path, self.thread_labels[1])
+        if self.keyboard_image_path:
+            self.display_image_on_label(self.keyboard_image_path, self.thread_labels[2])
         # if self.screen_image_path:
         #     self.display_image_on_label(self.screen_image_path, self.thread_labels[3])
 

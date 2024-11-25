@@ -16,23 +16,23 @@ scratches on random notebooks using image processing and machine learning techni
 
 ## Directory Structure
 
-### App
+### application
 Contains the main application logic, including the user interface and controller class.
 
-### dataset
-Store captured and detected laptop images. Each image is stored with timestamp and surface information.
+### documentations
+Notebooks and pdfs about the project (how to train/valid model, etc,.).
 
-### Detection.app
-An packaged app that can run by clicking.
-
-### Exceptions
+### exceptions
 All exceptions that would meet during detecting.
 
 ### IO
-Utility scripts for handling input and output operations, such as reading images, saving results, uploading function, etc.
+Utility scripts for handling input and output operations, such as training logic, reading images, saving results, uploading function, etc.
 
-### Models
+### models
 Stores models for detecting, including logo detection model, serial number detection model, defect detection model, etc.
+
+### tests
+Test scripts.
 
 ### UI
 UI interface.
@@ -42,15 +42,21 @@ Core function for interaction, including menubar, control panel, login, video ba
 
 ## Installation
 
-1. Clone the repository:
+Clone the repository:
    ```bash
    git clone https://github.com/semi-apple/DetectionApp.git
    ```
    
-2. Install libraries:
+Run script to install libraries:
    ```bash
-   pip install -r requirements.txt
+   ./instal.bat
    ```
+   
+Or manually install all libraries:
+    ```bash
+    pip install -r requirements.txt
+    ```
+
 ## Usage
 To run the main application, click `Detection.app` or use the following command:
   ```bash

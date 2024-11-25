@@ -6,6 +6,8 @@ name: Python package
 on:
   push:
     branches: [ "windows" ]
+    paths:
+      tests/
   pull_request:
     branches: [ "windows" ]
 
