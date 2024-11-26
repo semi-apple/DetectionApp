@@ -12,7 +12,7 @@ Functions:
 Author: Kun
 Last Modified: 10 Jul 2024
 """
-from Exceptions.DetectionExceptions import (LotNumberNotFoundException, LogoNotFoundException,
+from exceptions.DetectionExceptions import (LotNumberNotFoundException, LogoNotFoundException,
                                             SerialNumberNotFoundException)
 
 from PIL import Image

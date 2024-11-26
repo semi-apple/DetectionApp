@@ -6,8 +6,8 @@ Last Modified: 03 Jul 2024
 """
 import sys
 from PyQt5.QtWidgets import QApplication
-from Application.DetectionApp import DetectionApp
-from Widgets.Login import LoginWindow
+from application.DetectionApp import DetectionApp
+from widgets.Login import LoginWindow
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
