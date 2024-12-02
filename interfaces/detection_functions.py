@@ -28,7 +28,7 @@ pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tessera
 from sahi import AutoDetectionModel
 from sahi.predict import get_sliced_prediction
 from ultralytics import YOLO
-from classes import Defect
+from .classes import Defect
 
 TRANSFER = {1: 'screen', 0: 'top', 2: 'left', 3: 'right', 4: 'screen', 5: 'keyboard'}
 script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -58,13 +58,13 @@ def detect_lot_asset_barcode(original_img, model):
     for box in results[0].boxes:
         cls_id = int(box.cls[0].item())  # Class ID as integer
         x1, y1, x2, y2 = map(int, box.xyxy[0].tolist())  # Bounding box coordinates
-        detected_region = original_img[y1: y2, x1: x2]  # Crop the detected region
+        detected_region = original_img[y1-2: y2+2, x1-2: x2+2]  # Crop the detected region
         if cls_id == asset_id:
             asset = process_asset_number(detected_region)
         elif cls_id == lot_id:
             lot = process_lot_number(detected_region)
-        elif cls_id == barcode_id:
-            process_barcode(detected_region)
+        # elif cls_id == barcode_id:
+        #     process_barcode(detected_region)
 
     if lot is None:
         raise LotNumberNotFoundException()
@@ -76,8 +76,11 @@ def detect_lot_asset_barcode(original_img, model):
 def process_lot_number(lot_img):
     """Processes the lot number region."""
     gray_img = cv.cvtColor(lot_img, cv.COLOR_BGR2GRAY)
-    _, thresh = cv.threshold(gray_img, 150, 255, cv.THRESH_BINARY)
+    _, thresh = cv.threshold(gray_img, 200, 250, cv.THRESH_BINARY)
 
+    # cv.imshow("Barcode Image", thresh)
+    # cv.waitKey()
+    # cv.destroyAllWindows()
     lot_number = pytesseract.image_to_string(thresh)
     print(f"Detected lot number: {lot_number}")
 
@@ -87,8 +90,11 @@ def process_lot_number(lot_img):
 def process_asset_number(asset_img):
     """Processes the asset number region."""
     gray_img = cv.cvtColor(asset_img, cv.COLOR_BGR2GRAY)
-    _, thresh = cv.threshold(gray_img, 150, 255, cv.THRESH_BINARY)
+    _, thresh = cv.threshold(gray_img, 200, 250, cv.THRESH_BINARY)
 
+    # cv.imshow("Barcode Image", thresh)
+    # cv.waitKey()
+    # cv.destroyAllWindows()
     asset_number = pytesseract.image_to_string(thresh)
     print(f"Detected asset number: {asset_number}")
 
@@ -383,6 +389,7 @@ def segment_with_sahi(original_img, num_blocks, model):
 
 
 def detect_barcode(original_img, barcode_model):
+    """Archived"""
     # detect lot number
     barcode_results = barcode_model(original_img)
 
@@ -414,6 +421,7 @@ def detect_logo(original_img, logo_model):
 
 
 def detect_lot(original_img, ocr_model):
+    """Archived"""
     # detect lot number
     lot_results = ocr_model(original_img)
 
@@ -550,5 +558,8 @@ def draw_multiple_rectangles(image, port):
 if __name__ == "__main__":
     img = cv.imread(r'C:\Users\16379\Desktop\Dataset\dataset\images\train\image007.jpg')
     model = YOLO(r'C:\Users\16379\Desktop\DetectionApp\models\lot_asset_barcode.pt')
+    # ocr_model = YOLO(r'C:\Users\16379\Desktop\DetectionApp\models\lot.pt')
     lot, asset = detect_lot_asset_barcode(img, model)
-    print(lot, asset)
+    # lot = detect_lot(img, ocr_model=ocr_model)
+    # print(lot)
+    # print(lot, asset)

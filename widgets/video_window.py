@@ -79,8 +79,8 @@ class VideoBase(QObject):
         self.imgs = []
 
         self.buttons['detect_button'].clicked.connect(self.start_detection)
-        self.buttons['capture_button'].clicked.connect(self.capture_images)
-        # self.buttons['capture_button'].clicked.connect(self.capture_selected_images)
+        # self.buttons['capture_button'].clicked.connect(self.capture_images)
+        self.buttons['capture_button'].clicked.connect(self.capture_selected_images)
         self.buttons['stop_button'].clicked.connect(self.stop_detection)
 
     def init_models(self, models):
@@ -95,13 +95,13 @@ class VideoBase(QObject):
         self.screen_model = models['screen']
 
     def start_detection(self):
-        for i in range(6):
-            thread = VideoThread(i)
-            thread.change_pixmap_signal.connect(getattr(self, f'set_image{i}'))
-            thread.start()
-            self.threads.append(thread)
+        # for i in range(6):
+        #     thread = VideoThread(i)
+        #     thread.change_pixmap_signal.connect(getattr(self, f'set_image{i}'))
+        #     thread.start()
+        #     self.threads.append(thread)
         # ------------------------------------------------------------------------------ #
-        # self.select_images()
+        self.select_images()
 
 
 
@@ -262,21 +262,21 @@ class VideoBase(QObject):
         options = dialog.options()
         options |= QFileDialog.DontUseNativeDialog
 
-        self.top_image_path, _ = QFileDialog.getOpenFileName(None, "Select Top Image", "",
-                                                             "Image Files (*.png *.jpg *.jpeg *.bmp *.gif)",
-                                                             options=options)
-        self.bottom_image_path, _ = QFileDialog.getOpenFileName(None, "Select Bottom Image", "",
-                                                                "Image Files (*.png *.jpg *.jpeg *.bmp *.gif)",
-                                                                options=options)
-        self.keyboard_image_path, _ = QFileDialog.getOpenFileName(None, "Select Keyboard Image", "",
-                                                                  "Image Files (*.png *.jpg *.jpeg *.bmp *.gif)",
-                                                                  options=options)
+        # self.top_image_path, _ = QFileDialog.getOpenFileName(None, "Select Top Image", "",
+        #                                                      "Image Files (*.png *.jpg *.jpeg *.bmp *.gif)",
+        #                                                      options=options)
+        # self.bottom_image_path, _ = QFileDialog.getOpenFileName(None, "Select Bottom Image", "",
+        #                                                         "Image Files (*.png *.jpg *.jpeg *.bmp *.gif)",
+        #                                                         options=options)
+        # self.keyboard_image_path, _ = QFileDialog.getOpenFileName(None, "Select Keyboard Image", "",
+        #                                                           "Image Files (*.png *.jpg *.jpeg *.bmp *.gif)",
+        #                                                           options=options)
         # self.screen_image_path, _ = QFileDialog.getOpenFileName(None, "Select Screen Image", "",
         #                                                         "Image Files (*.png *.jpg *.jpeg *.bmp *.gif)",
         #                                                         options=options)
 
-        # self.top_image_path = r'C:\Users\Kun\Desktop\demo\20240919124954_top.jpg'
-        # self.bottom_image_path = r'C:\Users\Kun\Desktop\demo\009A9528.JPG'
+        self.top_image_path = r'C:\Users\16379\Desktop\Dataset\dataset\images\train\image010.jpg'
+        self.bottom_image_path = r'C:\Users\16379\Desktop\Dataset\dataset\images\train\image011.jpg'
         # self.keyboard_image_path = r'C:\Users\Kun\Desktop\demo\keyboard\20241003122511_keyboard.jpg'
 
         if self.top_image_path:
