@@ -8,8 +8,8 @@ from PyQt5.QtCore import QObject, pyqtSlot, Qt, pyqtSignal
 from PyQt5.QtGui import QImage, QPixmap
 from PyQt5.QtWidgets import QFileDialog
 from exceptions.detection_exceptions import DetectionException
-from IO.saver import ImageSaver
-from IO.detection_functions import *
+from interfaces.saver import ImageSaver
+from interfaces.detection_functions import *
 from .video_thread import VideoThread
 import cv2 as cv
 

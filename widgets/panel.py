@@ -31,7 +31,7 @@ import os
 import cv2 as cv
 from PyQt5.QtCore import Qt, QObject, pyqtSlot
 import csv
-from IO.defect import Defect
+from interfaces.classes import Defect
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from reportlab.lib.utils import ImageReader

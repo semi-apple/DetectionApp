@@ -6,7 +6,7 @@ sys.path.append(project_root)
 import os
 import pytest
 import numpy as np
-from IO.saver import ImageSaver
+from interfaces.saver import ImageSaver
 
 @pytest.fixture
 def image_saver(tmp_path):

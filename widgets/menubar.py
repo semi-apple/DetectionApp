@@ -26,7 +26,7 @@ Functions:
 Author: Kun
 Last Modified: 26 Aug 2024
 """
-from IO.export import ExportFile
+from interfaces.export import ExportFile
 from typing import Optional
 from PyQt5.QtCore import pyqtSlot, QObject, QCoreApplication
 from PyQt5.QtWidgets import QApplication
