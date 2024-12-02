@@ -79,8 +79,8 @@ class VideoBase(QObject):
         self.imgs = []
 
         self.buttons['detect_button'].clicked.connect(self.start_detection)
-        # self.buttons['capture_button'].clicked.connect(self.capture_images)
-        self.buttons['capture_button'].clicked.connect(self.capture_selected_images)
+        self.buttons['capture_button'].clicked.connect(self.capture_images)
+        # self.buttons['capture_button'].clicked.connect(self.capture_selected_images)
         self.buttons['stop_button'].clicked.connect(self.stop_detection)
 
     def init_models(self, models):
@@ -95,13 +95,13 @@ class VideoBase(QObject):
         self.screen_model = models['screen']
 
     def start_detection(self):
-        # for i in range(6):
-        #     thread = VideoThread(i)
-        #     thread.change_pixmap_signal.connect(getattr(self, f'set_image{i}'))
-        #     thread.start()
-        #     self.threads.append(thread)
+        for i in range(6):
+            thread = VideoThread(i)
+            thread.change_pixmap_signal.connect(getattr(self, f'set_image{i}'))
+            thread.start()
+            self.threads.append(thread)
         # ------------------------------------------------------------------------------ #
-        self.select_images()
+        # self.select_images()
 
 
 
@@ -283,9 +283,9 @@ class VideoBase(QObject):
             self.display_image_on_label(self.top_image_path, self.thread_labels[0])
         if self.bottom_image_path:
             self.display_image_on_label(self.bottom_image_path, self.thread_labels[1])
-        if self.keyboard_image_path:
-            self.display_image_on_label(self.keyboard_image_path, self.thread_labels[2])
-        # if self.screen_image_path:
+        # if self.keyboard_image_path:
+        #     self.display_image_on_label(self.keyboard_image_path, self.thread_labels[2])
+        # # if self.screen_image_path:
         #     self.display_image_on_label(self.screen_image_path, self.thread_labels[3])
         
     def capture_selected_images(self):
@@ -296,12 +296,15 @@ class VideoBase(QObject):
         original_imgs = []
         models_list = [self.top_bottom_model, self.top_bottom_model, self.keyboard_model, self.screen_model]
         for i, img in enumerate(self.imgs):
+            if img is None:
+                continue
             original_imgs.append((np.copy(img), i))
             if i == 0:  # detect logo and lot number
                 try:
                     logo = detect_logo(img, self.logo_model)
-                    lot = detect_lot(img, self.lot_model)
-                    detect_barcode(img, self.barcode_model)
+                    lot, asset = detect_lot_asset_barcode(img, self.lot_asset_barcode_model)
+                    # lot = detect_lot(img, self.lot_model)
+                    # detect_barcode(img, self.barcode_model)
 
                 except LogoNotFoundException as e:
                     print(f'On port {i} -> {e}')
@@ -330,10 +333,10 @@ class VideoBase(QObject):
                 finally:
                     detected_features['serial'] = serial
 
-            if i == 2:
-                detected_img, defects_counts = detect_keyboard(img, models_list[i])
-            else:
-                detected_img, defects_counts = segment_with_sahi(img, 2, models_list[i])
+            # if i == 2:
+            #     detected_img, defects_counts = detect_keyboard(img, models_list[i])
+            # else:
+            detected_img, defects_counts, defects = segment_with_sahi(img, 2, models_list[i])
             if defects_counts is not None:
                 detected_features['defects'].append((defects_counts, i))
             detected_imgs.append((np.copy(detected_img), i))
