@@ -5,7 +5,7 @@ plantcv==4.2.1
 PyQt5==5.15.11
 PyQt5_sip>=12.15,<13
 sahi~=0.11.15
-ultralytics==8.1.26
+ultralytics
 opencv-python~=4.6.0.66
 pytesseract
 pyinstaller
@@ -13,3 +13,4 @@ google-api-python-client
 google-auth-httplib2
 google-auth-oauthlib
 pydrive
+reportlab

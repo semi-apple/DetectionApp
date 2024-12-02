@@ -32,8 +32,8 @@ class VideoBase(QObject):
         self.imgs = []
 
         self.buttons['detect_button'].clicked.connect(self.start_detection)
-        # self.buttons['capture_button'].clicked.connect(self.capture_images)
-        self.buttons['capture_button'].clicked.connect(self.capture_selected_images)
+        self.buttons['capture_button'].clicked.connect(self.capture_images)
+        # self.buttons['capture_button'].clicked.connect(self.capture_selected_images)
         self.buttons['stop_button'].clicked.connect(self.stop_detection)
 
     def init_models(self, models):
@@ -47,13 +47,13 @@ class VideoBase(QObject):
         self.screen_model = models['screen']
 
     def start_detection(self):
-        # for i in range(6):
-        #     thread = VideoThread(i)
-        #     thread.change_pixmap_signal.connect(getattr(self, f'set_image{i}'))
-        #     thread.start()
-        #     self.threads.append(thread)
+        for i in range(6):
+            thread = VideoThread(i)
+            thread.change_pixmap_signal.connect(getattr(self, f'set_image{i}'))
+            thread.start()
+            self.threads.append(thread)
         # ------------------------------------------------------------------------------ #
-        self.select_images()
+        # self.select_images()
 
     def select_images(self):
         self.imgs = []
@@ -104,15 +104,17 @@ class VideoBase(QObject):
         detected_imgs = []
         detected_features = {}
         detected_img = None
-
-        for original_img, camera_port in original_imgs:
-            if original_img is None:
+        models_list = [self.top_bottom_model, self.top_bottom_model, self.keyboard_model, self.screen_model]
+        for img, camera_port in original_imgs:
+            if img is None:
                 continue
-
-            if camera_port == 1:  # detect logo and lot number
+            # for i, img in enumerate(self.imgs):
+            # original_imgs.append((np.copy(img), i))
+            if camera_port == 0:  # detect logo and lot number
                 try:
-                    logo = detect_logo(original_img, self.logo_model)
-                    lot = detect_lot(original_img, self.lot_model)
+                    logo = detect_logo(img, self.logo_model)
+                    lot = detect_lot(img, self.lot_model)
+                    detect_barcode(img, self.barcode_model)
 
                 except LogoNotFoundException as e:
                     print(f'On port {camera_port} -> {e}')
@@ -122,20 +124,16 @@ class VideoBase(QObject):
                     print(f'On port {camera_port} -> {e}')
                     lot = 'Lot_Not_Found'
 
+                except BarcodeNotFoundException as e:
+                    print(f'On port {camera_port} -> {e}')
+
                 finally:
                     detected_features['logo'], detected_features['lot'] = logo, lot
                     print(f'Logo: {logo}, Lot Number: {lot}')
 
+            if camera_port == 1:  # detect serial number
                 try:
-                    detected_img = segment_with_sahi(original_img, 4, self.top_bottom_model)
-
-                except DetectionException as e:
-                    print(f'On port {camera_port} -> {e}')
-                    detected_img = original_img
-
-            if camera_port == 0:  # bottom, detect serial number
-                try:
-                    serial = detect_serial(original_img, self.serial_region_model, self.serial_model)
+                    serial = detect_serial(img, self.serial_region_model, self.serial_model)
                     print(f'Serial Number: {serial}')
 
                 except SerialNumberNotFoundException as e:
@@ -145,30 +143,18 @@ class VideoBase(QObject):
                 finally:
                     detected_features['serial'] = serial
 
-                try:
-                    detected_img = defects_segment(original_img, self.top_bottom_model)
-
-                except DetectionException as e:
-                    print(f'On port {camera_port} -> {e}')
-                    detected_img = original_img
-
-            if camera_port == 2:  # keyboard
-                try:
-                    detected_img = defects_segment(original_img, self.top_bottom_model)  # need to change model later on
-
-                except DetectionException as e:
-                    print(f'On port {camera_port} -> {e}')
-                    detected_img = original_img
-
-            if camera_port == 3:  # screen
-                try:
-                    detected_img = defects_segment(original_img, self.top_bottom_model)  # need to change model later on
-
-                except DetectionException as e:
-                    print(f'On port {camera_port} -> {e}')
-                    detected_img = original_img
-
+            # if camera_port == 2:
+            #     detected_img, defects_counts = detect_keyboard(img, models_list[camera_port])
+            # else:
+            detected_img, defects_counts = segment_with_sahi(img, 2, models_list[camera_port])
+            if defects_counts is not None:
+                detected_features['defects'].append((defects_counts, camera_port))
             detected_imgs.append((np.copy(detected_img), camera_port))
+
+        # self.save_raw_info(folder_name='original', imgs=original_imgs)
+        # # cv_folder = lot + '_cv'
+        # self.save_raw_info(folder_name='detected', imgs=detected_imgs)
+        # self.laptop_info.emit(detected_features)
 
         return detected_imgs, detected_features
 

@@ -47,3 +47,6 @@ documentation/training_results/
 
 # dataset
 dataset/
+dataset/*.pdf
+dataset/*.csv
+dataset/*.jpg
