@@ -55,37 +55,7 @@ class VideoBase(QObject):
         # ------------------------------------------------------------------------------ #
         # self.select_images()
 
-    def select_images(self):
-        self.imgs = []
-        dialog = QFileDialog()
-        options = dialog.options()
-        options |= QFileDialog.DontUseNativeDialog
 
-        self.top_image_path, _ = QFileDialog.getOpenFileName(None, "Select Top Image", "",
-                                                             "Image Files (*.png *.jpg *.jpeg *.bmp *.gif)",
-                                                             options=options)
-        self.bottom_image_path, _ = QFileDialog.getOpenFileName(None, "Select Bottom Image", "",
-                                                                "Image Files (*.png *.jpg *.jpeg *.bmp *.gif)",
-                                                                options=options)
-        self.keyboard_image_path, _ = QFileDialog.getOpenFileName(None, "Select Keyboard Image", "",
-                                                                  "Image Files (*.png *.jpg *.jpeg *.bmp *.gif)",
-                                                                  options=options)
-        # self.screen_image_path, _ = QFileDialog.getOpenFileName(None, "Select Screen Image", "",
-        #                                                         "Image Files (*.png *.jpg *.jpeg *.bmp *.gif)",
-        #                                                         options=options)
-
-        # self.top_image_path = r'C:\Users\Kun\Desktop\demo\20240919124954_top.jpg'
-        # self.bottom_image_path = r'C:\Users\Kun\Desktop\demo\009A9528.JPG'
-        # self.keyboard_image_path = r'C:\Users\Kun\Desktop\demo\keyboard\20241003122511_keyboard.jpg'
-
-        if self.top_image_path:
-            self.display_image_on_label(self.top_image_path, self.thread_labels[0])
-        if self.bottom_image_path:
-            self.display_image_on_label(self.bottom_image_path, self.thread_labels[1])
-        if self.keyboard_image_path:
-            self.display_image_on_label(self.keyboard_image_path, self.thread_labels[2])
-        # if self.screen_image_path:
-        #     self.display_image_on_label(self.screen_image_path, self.thread_labels[3])
 
     def display_image_on_label(self, image_path, label):
         img = cv.imread(image_path)
@@ -158,60 +128,7 @@ class VideoBase(QObject):
 
         return detected_imgs, detected_features
 
-    def capture_selected_images(self):
-        logo, lot, serial = '', '', ''
-        detected_imgs = []
-        detected_features = {}
-        detected_features['defects'] = []
-        original_imgs = []
-        models_list = [self.top_bottom_model, self.top_bottom_model, self.keyboard_model, self.screen_model]
-        for i, img in enumerate(self.imgs):
-            original_imgs.append((np.copy(img), i))
-            if i == 0:  # detect logo and lot number
-                try:
-                    logo = detect_logo(img, self.logo_model)
-                    lot = detect_lot(img, self.lot_model)
-                    detect_barcode(img, self.barcode_model)
 
-                except LogoNotFoundException as e:
-                    print(f'On port {i} -> {e}')
-                    logo = 'Logo_Not_Found'
-
-                except LotNumberNotFoundException as e:
-                    print(f'On port {i} -> {e}')
-                    lot = 'Lot_Not_Found'
-
-                except BarcodeNotFoundException as e:
-                    print(f'On port {i} -> {e}')
-
-                finally:
-                    detected_features['logo'], detected_features['lot'] = logo, lot
-                    print(f'Logo: {logo}, Lot Number: {lot}')
-
-            if i == 1:  # detect serial number
-                try:
-                    serial = detect_serial(img, self.serial_region_model, self.serial_model)
-                    print(f'Serial Number: {serial}')
-
-                except SerialNumberNotFoundException as e:
-                    print(f'On port {i} -> {e}')
-                    serial = 'Serial_Not_Found'
-
-                finally:
-                    detected_features['serial'] = serial
-
-            if i == 2:
-                detected_img, defects_counts = detect_keyboard(img, models_list[i])
-            else:
-                detected_img, defects_counts = segment_with_sahi(img, 2, models_list[i])
-            if defects_counts is not None:
-                detected_features['defects'].append((defects_counts, i))
-            detected_imgs.append((np.copy(detected_img), i))
-
-        # self.save_raw_info(folder_name='original', imgs=original_imgs)
-        # # cv_folder = lot + '_cv'
-        # self.save_raw_info(folder_name='detected', imgs=detected_imgs)
-        # self.laptop_info.emit(detected_features)
 
     def capture_images(self):
         original_imgs = []
@@ -291,3 +208,92 @@ class VideoBase(QObject):
 
     def closeEvent(self, event):
         self.stop_detection()
+
+# ----------------------------------- test ----------------------------------------------------------------- #  
+
+    def select_images(self):
+        self.imgs = []
+        dialog = QFileDialog()
+        options = dialog.options()
+        options |= QFileDialog.DontUseNativeDialog
+
+        self.top_image_path, _ = QFileDialog.getOpenFileName(None, "Select Top Image", "",
+                                                             "Image Files (*.png *.jpg *.jpeg *.bmp *.gif)",
+                                                             options=options)
+        self.bottom_image_path, _ = QFileDialog.getOpenFileName(None, "Select Bottom Image", "",
+                                                                "Image Files (*.png *.jpg *.jpeg *.bmp *.gif)",
+                                                                options=options)
+        self.keyboard_image_path, _ = QFileDialog.getOpenFileName(None, "Select Keyboard Image", "",
+                                                                  "Image Files (*.png *.jpg *.jpeg *.bmp *.gif)",
+                                                                  options=options)
+        # self.screen_image_path, _ = QFileDialog.getOpenFileName(None, "Select Screen Image", "",
+        #                                                         "Image Files (*.png *.jpg *.jpeg *.bmp *.gif)",
+        #                                                         options=options)
+
+        # self.top_image_path = r'C:\Users\Kun\Desktop\demo\20240919124954_top.jpg'
+        # self.bottom_image_path = r'C:\Users\Kun\Desktop\demo\009A9528.JPG'
+        # self.keyboard_image_path = r'C:\Users\Kun\Desktop\demo\keyboard\20241003122511_keyboard.jpg'
+
+        if self.top_image_path:
+            self.display_image_on_label(self.top_image_path, self.thread_labels[0])
+        if self.bottom_image_path:
+            self.display_image_on_label(self.bottom_image_path, self.thread_labels[1])
+        if self.keyboard_image_path:
+            self.display_image_on_label(self.keyboard_image_path, self.thread_labels[2])
+        # if self.screen_image_path:
+        #     self.display_image_on_label(self.screen_image_path, self.thread_labels[3])
+        
+    def capture_selected_images(self):
+        logo, lot, serial = '', '', ''
+        detected_imgs = []
+        detected_features = {}
+        detected_features['defects'] = []
+        original_imgs = []
+        models_list = [self.top_bottom_model, self.top_bottom_model, self.keyboard_model, self.screen_model]
+        for i, img in enumerate(self.imgs):
+            original_imgs.append((np.copy(img), i))
+            if i == 0:  # detect logo and lot number
+                try:
+                    logo = detect_logo(img, self.logo_model)
+                    lot = detect_lot(img, self.lot_model)
+                    detect_barcode(img, self.barcode_model)
+
+                except LogoNotFoundException as e:
+                    print(f'On port {i} -> {e}')
+                    logo = 'Logo_Not_Found'
+
+                except LotNumberNotFoundException as e:
+                    print(f'On port {i} -> {e}')
+                    lot = 'Lot_Not_Found'
+
+                except BarcodeNotFoundException as e:
+                    print(f'On port {i} -> {e}')
+
+                finally:
+                    detected_features['logo'], detected_features['lot'] = logo, lot
+                    print(f'Logo: {logo}, Lot Number: {lot}')
+
+            if i == 1:  # detect serial number
+                try:
+                    serial = detect_serial(img, self.serial_region_model, self.serial_model)
+                    print(f'Serial Number: {serial}')
+
+                except SerialNumberNotFoundException as e:
+                    print(f'On port {i} -> {e}')
+                    serial = 'Serial_Not_Found'
+
+                finally:
+                    detected_features['serial'] = serial
+
+            if i == 2:
+                detected_img, defects_counts = detect_keyboard(img, models_list[i])
+            else:
+                detected_img, defects_counts = segment_with_sahi(img, 2, models_list[i])
+            if defects_counts is not None:
+                detected_features['defects'].append((defects_counts, i))
+            detected_imgs.append((np.copy(detected_img), i))
+
+        # self.save_raw_info(folder_name='original', imgs=original_imgs)
+        # # cv_folder = lot + '_cv'
+        # self.save_raw_info(folder_name='detected', imgs=detected_imgs)
+        # self.laptop_info.emit(detected_features)

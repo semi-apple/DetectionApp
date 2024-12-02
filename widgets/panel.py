@@ -38,11 +38,11 @@ from reportlab.lib.utils import ImageReader
 from PIL import Image
 import numpy as np
 
-_Widget_dir = os.path.dirname(os.path.abspath(__file__))
+_widget_dir = os.path.dirname(os.path.abspath(__file__))
 
 
-def save_to_pdf(defects: list[Defect], name: str):
-    pdf_name = os.path.join(_Widget_dir, f'../dataset/{name}.pdf')
+def save_to_pdf(defects: list, name: str):
+    pdf_name = os.path.join(_widget_dir, f'../dataset/{name}.pdf')
     c = canvas.Canvas(pdf_name, pagesize=letter)
     width, height = letter
 
@@ -58,19 +58,15 @@ def save_to_pdf(defects: list[Defect], name: str):
         c.drawString(50, y_position, bbox_info)
         y_position -= 20
 
-        # insert image
+        # Process image directly in memory
         if isinstance(d.image, np.ndarray):
-            tem_image_path = f'tem_defect_{idx}.jpg'
-            Image.fromarray(d.image).save(tem_image_path)
-        else:
-            tem_image_path = d.image
-
-        if isinstance(d.image, np.ndarray):
-            pil_image = Image.fromarray(d.image)
-            img_reader = ImageReader(pil_image)
+            pil_image = Image.fromarray(d.image)  # Convert NumPy array to PIL image
         else:
             raise ValueError("Image must be a NumPy array")
 
+        img_reader = ImageReader(pil_image)  # Use PIL image directly
+
+        # Calculate display size based on aspect ratio
         original_width, original_height = pil_image.size
         aspect_ratio = original_width / original_height
 
@@ -88,12 +84,27 @@ def save_to_pdf(defects: list[Defect], name: str):
     print(f'PDF has saved to {pdf_name}')
 
 
+def init_dataset():
+    root_path = os.path.abspath(os.path.join(_widget_dir, '..'))
+    dataset_dir_path = os.path.join(root_path, 'Dataset')
+    if not os.path.exists(dataset_dir_path):
+        os.makedirs(dataset_dir_path)
+
+    dataset_file = os.path.join(dataset_dir_path, 'dataset.csv')
+    if not os.path.exists(dataset_file):
+        fieldnames = ['model', 'serial number', 'lot number', 'grade', 'stain', 'scratch']
+        with open(dataset_file, 'a', newline='', encoding='utf-8') as dataset:
+            writer = csv.DictWriter(dataset, fieldnames=fieldnames)
+            writer.writeheader()
+
+
 class PanelBase(QObject):
     def __init__(self, input_lines, panel_buttons):
         super(PanelBase, self).__init__()
         self.input_lines = input_lines
         self.panel_buttons = panel_buttons
         self.handle_signal()
+        init_dataset()
 
     def handle_signal(self):
         assert 'save_button' in self.panel_buttons
@@ -104,13 +115,17 @@ class PanelBase(QObject):
 
     def save_to_dataset(self):
         saving_info = {}
-        dataset_file = os.path.join(_Widget_dir, '../dataset/dataset.csv')
+        dataset_file = os.path.join(_widget_dir, '../dataset/dataset.csv')
         for name, input_line in self.input_lines.items():
             name = name[:-6].replace('_', ' ')
             saving_info[name] = input_line.text()
 
-        # Add information into dataset
+        # Skip saving if all input fields are empty
+        if all(value == "" for value in saving_info.values()):
+            print("No data to save. Skipping...")
+            return
 
+        # Add information into dataset
         fieldnames = ['model', 'serial number', 'lot number', 'grade', 'stain', 'scratch']
         with open(dataset_file, 'a', newline='', encoding='utf-8') as dataset:
             writer = csv.DictWriter(dataset, fieldnames=fieldnames)

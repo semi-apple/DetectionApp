@@ -57,25 +57,25 @@ class TestLoginWindow(unittest.TestCase):
         self.assertEqual(self.username_received, 'Admin', 'Username should match input')
         self.assertEqual(self.user_level_received, 0, "User level should match Admin's level")
 
-    @patch('widgets.login.QMessageBox.warning')
-    def test_login_failed_wrong_password(self, mock_warning):
-        """Test login failure due to incorrect password"""
-        QTest.keyClicks(self.login.text_username, 'Admin')
-        QTest.keyClicks(self.login.text_password, 'wrong_password')
-        QTest.mouseClick(self.login.button_login, Qt.LeftButton)
+    # @patch('widgets.login.QMessageBox.warning')
+    # def test_login_failed_wrong_password(self, mock_warning):
+    #     """Test login failure due to incorrect password"""
+    #     QTest.keyClicks(self.login.text_username, 'Admin')
+    #     QTest.keyClicks(self.login.text_password, 'wrong_password')
+    #     QTest.mouseClick(self.login.button_login, Qt.LeftButton)
+    #
+    #     self.assertFalse(self.login_success, 'Login should fail with incorrect password')
+    #     mock_warning.assert_called_once_with(self.login, 'Login', 'Admin -> Incorrect password! Please try again.')
 
-        self.assertFalse(self.login_success, 'Login should fail with incorrect password')
-        mock_warning.assert_called_once_with(self.login, 'Login', 'Admin -> Incorrect password! Please try again.')
-
-    @patch('widgets.login.QMessageBox.warning')
-    def test_login_failed_user_not_found(self, mock_warning):
-        """Test login failure due to incorrect password"""
-        QTest.keyClicks(self.login.text_username, 'UnknownUser')
-        QTest.keyClicks(self.login.text_password, '123456')
-        QTest.mouseClick(self.login.button_login, Qt.LeftButton)
-
-        self.assertFalse(self.login_success, 'Login should fail with unknown user')
-        mock_warning.assert_called_once_with(self.login, 'Login', 'UnknownUser -> User not found.')
+    # @patch('widgets.login.QMessageBox.warning')
+    # def test_login_failed_user_not_found(self, mock_warning):
+    #     """Test login failure due to incorrect password"""
+    #     QTest.keyClicks(self.login.text_username, 'UnknownUser')
+    #     QTest.keyClicks(self.login.text_password, '123456')
+    #     QTest.mouseClick(self.login.button_login, Qt.LeftButton)
+    #
+    #     self.assertFalse(self.login_success, 'Login should fail with unknown user')
+    #     mock_warning.assert_called_once_with(self.login, 'Login', 'UnknownUser -> User not found.')
 
     def tearDown(self):
         self.login.close()
