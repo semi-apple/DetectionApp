@@ -47,6 +47,7 @@ def init_models():
     laptop_model_path = os.path.join(model_path, 'laptop.pt')
     serial_region_model_path = os.path.join(model_path, 'region.pt')
     serial_model_path = os.path.join(model_path, 'serial.pt')
+    lot_asset_barcode_path = os.path.join(model_path, 'lot_asset_barcode.pt')
 
     defects_model = YOLO(top_bottom_model_path)
     logo_model = YOLO(logo_model_path)
@@ -56,6 +57,7 @@ def init_models():
     laptop_model = YOLO(laptop_model_path)
     barcode_model = YOLO(barcode_model_path)
     keyboard_model = YOLO(keyboard_model_path)
+    lot_asset_barcode_model = YOLO(lot_asset_barcode_path)
     if os.path.exists(screen_model_path):
         screen_model = YOLO(screen_model_path)
     else:
@@ -63,7 +65,7 @@ def init_models():
 
     return {'top_bottom': defects_model, 'logo': logo_model, 'lot': lot_model, 'serial_region': serial_region_model,
             'serial': serial_model, 'laptop': laptop_model, 'barcode': barcode_model, 'keyboard': keyboard_model,
-            'screen': screen_model}
+            'screen': screen_model, 'lot_asset_barcode': lot_asset_barcode_model}
 
 
 def check_dataset():

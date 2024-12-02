@@ -28,11 +28,81 @@ pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tessera
 from sahi import AutoDetectionModel
 from sahi.predict import get_sliced_prediction
 from ultralytics import YOLO
+from classes import Defect
 
 TRANSFER = {1: 'screen', 0: 'top', 2: 'left', 3: 'right', 4: 'screen', 5: 'keyboard'}
 script_dir = os.path.dirname(os.path.abspath(__file__))
 print(f'script path: {script_dir}')
 models_dir_path = os.path.join(script_dir, '../models')
+
+
+def detect_lot_asset_barcode(original_img, model):
+    """
+       Detects lot number, asset number, and barcode in the image using a YOLO model.
+
+       Args:
+           original_img: The input image.
+           detection_model: YOLO model for detection.
+           classes: List of class names the model can detect (e.g., ['lot number', 'asset number', 'barcode']).
+
+       Returns:
+           Dictionary containing detected lot number, asset number, and barcode images or extracted text.
+       """
+    lot, asset = '', ''
+    results = model(original_img)
+    classes = list(model.names.values())
+    classes_ids = [classes.index(cls) for cls in classes]
+    asset_id = classes.index('asset')
+    lot_id = classes.index('lot')
+    barcode_id = classes.index('barcode')
+    for box in results[0].boxes:
+        cls_id = int(box.cls[0].item())  # Class ID as integer
+        x1, y1, x2, y2 = map(int, box.xyxy[0].tolist())  # Bounding box coordinates
+        detected_region = original_img[y1: y2, x1: x2]  # Crop the detected region
+        if cls_id == asset_id:
+            asset = process_asset_number(detected_region)
+        elif cls_id == lot_id:
+            lot = process_lot_number(detected_region)
+        elif cls_id == barcode_id:
+            process_barcode(detected_region)
+
+    if lot is None:
+        raise LotNumberNotFoundException()
+    # if asset is None:
+
+    return lot, asset
+
+
+def process_lot_number(lot_img):
+    """Processes the lot number region."""
+    gray_img = cv.cvtColor(lot_img, cv.COLOR_BGR2GRAY)
+    _, thresh = cv.threshold(gray_img, 150, 255, cv.THRESH_BINARY)
+
+    lot_number = pytesseract.image_to_string(thresh)
+    print(f"Detected lot number: {lot_number}")
+
+    return lot_number
+
+
+def process_asset_number(asset_img):
+    """Processes the asset number region."""
+    gray_img = cv.cvtColor(asset_img, cv.COLOR_BGR2GRAY)
+    _, thresh = cv.threshold(gray_img, 150, 255, cv.THRESH_BINARY)
+
+    asset_number = pytesseract.image_to_string(thresh)
+    print(f"Detected asset number: {asset_number}")
+
+    return asset_number
+
+
+def process_barcode(barcode_img):
+    """Processes the barcode region."""
+    # You can use specialized barcode reading libraries (e.g., `pyzbar` or `pytesseract`)
+    cv.imshow("Barcode Image", barcode_img)
+    cv.waitKey()
+    cv.destroyAllWindows()
+
+    return barcode_img
 
 
 def defects_segment(img, model):
@@ -270,6 +340,8 @@ def segment_with_sahi(original_img, num_blocks, model):
     img_area = h * w
     stain_area = 0
 
+    defects = []
+
     for prediction in results.object_prediction_list:
         for polygon in prediction.mask.segmentation:
             points = np.array(polygon).reshape((-1, 2))
@@ -288,9 +360,14 @@ def segment_with_sahi(original_img, num_blocks, model):
             # cv.fillPoly(img, [points], colors[color_number])
 
             label = f"{classes[defect_id]}: {prediction.score.value * 100:.2f}%"
-            x1, y1, _, _ = prediction.bbox.to_xyxy()
+            x1, y1, x2, y2 = prediction.bbox.to_xyxy()
             # cv.putText(original_img, label, (x1, y1 - 10), cv.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
             cv.putText(laptop_region_img, label, (x1, y1 - 10), cv.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
+
+            # store defect image
+            defect_img = np.copy(laptop_region_img[y1: y2, x1: x2])
+            d = Defect(image=defect_img, cls=classes[defect_id], xyxy=(x1, y1, x2, y2))
+            defects.append(d)
 
     stain_area_percentage = (stain_area / img_area) * 100 if img_area > 0 else 0
     print(f"Detected {defects_counts[scratch_id]} scratch(es)")
@@ -302,8 +379,7 @@ def segment_with_sahi(original_img, num_blocks, model):
     detected_img = draw_multiple_rectangles(laptop_region_img, 1)
     defects_counts[0] = scratch_count
     defects_counts[1] = stain_count
-    return detected_img, defects_counts
-    # return original_img
+    return detected_img, defects_counts, defects
 
 
 def detect_barcode(original_img, barcode_model):
@@ -472,6 +548,7 @@ def draw_multiple_rectangles(image, port):
 
 
 if __name__ == "__main__":
-    img = cv.imread(r'C:\Users\Kun\Desktop\demo\keyboard\20241003122528_keyboard.jpg')
-    model = YOLO(r'C:\Users\Kun\Desktop\DetectionApp\models\keyboard.pt')
-    detected_img = detect_keyboard(img, model)
+    img = cv.imread(r'C:\Users\16379\Desktop\Dataset\dataset\images\train\image007.jpg')
+    model = YOLO(r'C:\Users\16379\Desktop\DetectionApp\models\lot_asset_barcode.pt')
+    lot, asset = detect_lot_asset_barcode(img, model)
+    print(lot, asset)

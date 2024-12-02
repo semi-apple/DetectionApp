@@ -32,56 +32,9 @@ import cv2 as cv
 from PyQt5.QtCore import Qt, QObject, pyqtSlot
 import csv
 from interfaces.classes import Defect
-from reportlab.lib.pagesizes import letter
-from reportlab.pdfgen import canvas
-from reportlab.lib.utils import ImageReader
-from PIL import Image
-import numpy as np
+
 
 _widget_dir = os.path.dirname(os.path.abspath(__file__))
-
-
-def save_to_pdf(defects: list, name: str):
-    pdf_name = os.path.join(_widget_dir, f'../dataset/{name}.pdf')
-    c = canvas.Canvas(pdf_name, pagesize=letter)
-    width, height = letter
-
-    y_position = height - 50
-
-    for idx, d in enumerate(defects):
-        # idx of defect
-        c.drawString(50, y_position, f'Defect {idx + 1}: {d.cls}')
-        y_position -= 20
-
-        # xyxy of defect
-        bbox_info = f'bbox: {d.xyxy}'
-        c.drawString(50, y_position, bbox_info)
-        y_position -= 20
-
-        # Process image directly in memory
-        if isinstance(d.image, np.ndarray):
-            pil_image = Image.fromarray(d.image)  # Convert NumPy array to PIL image
-        else:
-            raise ValueError("Image must be a NumPy array")
-
-        img_reader = ImageReader(pil_image)  # Use PIL image directly
-
-        # Calculate display size based on aspect ratio
-        original_width, original_height = pil_image.size
-        aspect_ratio = original_width / original_height
-
-        display_width = 500
-        display_height = display_width / aspect_ratio
-
-        c.drawImage(img_reader, 50, y_position - display_height, width=display_width, height=display_height)
-        y_position -= 220
-
-        if y_position < 100:  # end of page
-            c.showPage()
-            y_position = height - 50
-
-    c.save()
-    print(f'PDF has saved to {pdf_name}')
 
 
 def init_dataset():
@@ -159,7 +112,7 @@ class PanelBase(QObject):
         self.input_lines['stain_input'].setText(str(stain_counts))
 
         grade_info = {'scratch': scratch_counts, 'stain': stain_counts}
-        print('Info Update Succeeful')
+        print('Info Update Successful')
 
         self.grade(grade_info)
         # self.save_to_dataset()
