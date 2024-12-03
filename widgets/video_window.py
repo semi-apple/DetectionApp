@@ -275,16 +275,20 @@ class VideoBase(QObject):
         #                                                         "Image Files (*.png *.jpg *.jpeg *.bmp *.gif)",
         #                                                         options=options)
 
-        self.top_image_path = r'C:\Users\16379\Desktop\Dataset\dataset\images\train\image010.jpg'
-        self.bottom_image_path = r'C:\Users\16379\Desktop\Dataset\dataset\images\train\image011.jpg'
+        # self.top_image_path = r'C:\Users\16379\Desktop\Dataset\dataset\images\train\image010.jpg'
+        # self.bottom_image_path = r'C:\Users\16379\Desktop\Dataset\dataset\images\train\image011.jpg'
+
+        self.top_image_path = '/Users/kunzhou/Desktop/demo/20240919121831_top.jpg'
+        self.bottom_image_path = '/Users/kunzhou/Desktop/demo/009A9567.JPG'
+
         # self.keyboard_image_path = r'C:\Users\Kun\Desktop\demo\keyboard\20241003122511_keyboard.jpg'
 
         if self.top_image_path:
             self.display_image_on_label(self.top_image_path, self.thread_labels[0])
         if self.bottom_image_path:
             self.display_image_on_label(self.bottom_image_path, self.thread_labels[1])
-        if self.keyboard_image_path:
-            self.display_image_on_label(self.keyboard_image_path, self.thread_labels[2])
+        # if self.keyboard_image_path:
+        #     self.display_image_on_label(self.keyboard_image_path, self.thread_labels[2])
         # if self.screen_image_path:
         #     self.display_image_on_label(self.screen_image_path, self.thread_labels[3])
         

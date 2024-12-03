@@ -23,7 +23,7 @@ import pytesseract
 from exceptions.detection_exceptions import (LotNumberNotFoundException, LogoNotFoundException,
                                              SerialNumberNotFoundException, BarcodeNotFoundException)
 
-pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+# pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
 
 from sahi import AutoDetectionModel
 from sahi.predict import get_sliced_prediction
