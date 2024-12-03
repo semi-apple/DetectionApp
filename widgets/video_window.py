@@ -7,7 +7,7 @@ Last Modified: 03 Jul 2024
 from PyQt5.QtCore import QObject, pyqtSlot, Qt, pyqtSignal
 from PyQt5.QtGui import QImage, QPixmap
 from PyQt5.QtWidgets import QFileDialog
-from exceptions.detection_exceptions import DetectionException
+# from exceptions.detection_exceptions import DetectionException
 from interfaces.saver import ImageSaver
 from interfaces.detection_functions import *
 from .video_thread import VideoThread

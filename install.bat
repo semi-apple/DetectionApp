@@ -1,5 +1,5 @@
 @echo off
-python --version >null 2>&1
+@REM python --version >null 2>&1
 if %errorlevel% neq 0 (
     echo "Python is not installed, please install Python 3.11+ and try again."
     exit /b 1
@@ -17,12 +17,24 @@ if exist venv (
     )
 )
 
-@REM echo "Activating virtual environment..."
-@REM call venv\Scripts\activate.bat
-@REM if %errorlevel% neq 0 (
-@REM     echo "Failed to activate virtual environment."
-@REM     exit /b 1
-@REM )
+echo "Activating virtual environment..."
+call venv\Scripts\activate.bat
+if %errorlevel% neq 0 (
+    echo "Failed to activate virtual environment."
+    exit /b 1
+)
+python -c "import sys; print(sys.executable)"
+
+echo "Setting VSCode interpreter..."
+if not exist .vscode{
+    mkdir .vscode
+}
+
+echo "Changing interpreter path..."
+echo { > .vscode\settings.json
+echo    "python.pythonPath": "%cd%\venv\Scripts\python.exe" >> .vscode\settings.json
+echo } >> .vscode\settings.json
+
 
 echo "Updating pip..."
 python -m pip install --upgrade pip
