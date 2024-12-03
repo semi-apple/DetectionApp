@@ -22,7 +22,7 @@ _widget_dir = os.path.dirname(os.path.abspath(__file__))
 
 TRANSFER = {0: 'top', 1: 'bottom', 2: 'keyboard', 3: 'screen', 4: 'left', 5: 'right'}
 
-def save_to_pdf(defects_list: list, name: str):
+def save_to_pdf(defects_list: list[tuple[list[Defect], int]], name: str):
     pdf_name = os.path.join(_widget_dir, f'../dataset/{name}.pdf')
     c = canvas.Canvas(pdf_name, pagesize=letter)
     width, height = letter
@@ -33,12 +33,16 @@ def save_to_pdf(defects_list: list, name: str):
     for defects, camera_port in defects_list:
         # idx of defect
         for d in defects:
+            cv.imshow('d image', d.image)
+            cv.waitKey()
+            cv.destroyAllWindows()
             idx += 1
             c.drawString(50, y_position, f'Defect {idx + 1}: {d.cls} on {TRANSFER[camera_port]}')
             y_position -= 20
 
             # xyxy of defect
-            bbox_info = f'bbox: {d.xyxy}'
+            x1, y1, x2, y2 = d.xyxy
+            bbox_info = f'bbox: ({x1}, {y1}), ({x2}, {y1}), ({x1}, {y2}), ({x2}, {y2})'
             c.drawString(50, y_position, bbox_info)
             y_position -= 20
 
