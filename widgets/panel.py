@@ -122,14 +122,3 @@ class PanelBase(QObject):
         self.input_lines['grade_input'].setText('C')
 
 
-if __name__ == '__main__':
-    img_path = '/Users/kunzhou/Desktop/demo/20240919121719_top.jpg'
-    image = cv.imread(img_path)
-    xyxy = (10, 10, 20, 20)
-    img = image[10: 500, 10: 500]
-    d = Defect(image, 'stain', xyxy)
-    cv.imshow('test', image)
-    cv.waitKey()
-    cv.destroyAllWindows()
-    defects = [d, ]
-    # save_to_pdf(defects, 'test')

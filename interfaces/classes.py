@@ -7,6 +7,8 @@ Classes:
 Author: Kun
 Last Modified: 02 Dec 2024
 """
+
+
 class Defect:
     def __init__(self, image, cls, xyxy):
         self.cls = cls
