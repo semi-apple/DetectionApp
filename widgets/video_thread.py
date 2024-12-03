@@ -128,8 +128,8 @@ class VideoCapture:
     def start(self):
         """Start capturing video."""
         if not self.cap:
-            self.cap = cv.VideoCapture(self.camera_port, cv.CAP_DSHOW)
-            # self.cap = cv.VideoCapture(self.camera_port)
+            # self.cap = cv.VideoCapture(self.camera_port, cv.CAP_DSHOW)
+            self.cap = cv.VideoCapture(self.camera_port)
             if not self.cap.isOpened():
                 print(f"Failed to open camera {self.camera_port}")
                 return
