@@ -28,7 +28,7 @@ from exceptions.detection_exceptions import (LotNumberNotFoundException, LogoNot
 from sahi import AutoDetectionModel
 from sahi.predict import get_sliced_prediction
 from ultralytics import YOLO
-from classes import Defect
+from .classes import Defect
 
 TRANSFER = {1: 'screen', 0: 'top', 2: 'left', 3: 'right', 4: 'screen', 5: 'keyboard'}
 script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -379,13 +379,13 @@ def segment_with_sahi(original_img, num_blocks, model):
 
     defects = filter_defects(defects, min_area=256, iou_threshold=0.9)
     stain_area_percentage = (stain_area / img_area) * 100 if img_area > 0 else 0
-    print(f"Detected {defects_counts[scratch_id]} scratch(es)")
+    print(f"Detected {scratch_count} scratch(es)")
     print(f"Stain area percentage: {stain_area_percentage}%")
     cv.imshow('detected', laptop_region_img)
-    for d in defects:
-        cv.imshow('defects', d.image)
-        cv.waitKey()
-        cv.destroyAllWindows()
+    # for d in defects:
+    #     cv.imshow('defects', d.image)
+    #     cv.waitKey()
+    #     cv.destroyAllWindows()
 
     # cv.imshow('Image', original_img)
     cv.waitKey()
