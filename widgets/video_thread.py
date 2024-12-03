@@ -22,17 +22,6 @@ def convert_cv_qt(cv_img):
     return convert_to_Qt_format
 
 
-@pyqtSlot(np.ndarray)
-def update_image(cv_img, label):
-    rgb_image = cv.cvtColor(cv_img, cv.COLOR_BGR2RGB)
-    h, w, ch = rgb_image.shape
-    bytes_per_line = ch * w
-    convert_to_Qt_format = QImage(rgb_image.data, w, h, bytes_per_line, QImage.Format_RGB888)
-    p = convert_to_Qt_format.scaled(640, 480, aspectRatioMode=Qt.IgnoreAspectRatio)
-    pixmap = QPixmap.fromImage(p)
-    label.setPixmap(pixmap)
-
-
 class VideoThread(QThread):
     change_pixmap_signal = pyqtSignal(QImage)
 
@@ -41,22 +30,16 @@ class VideoThread(QThread):
         self.camera_port = camera_port
         self.running = True
         self.cap = None
-        self.lock = threading.Lock()
-        # self.run
 
     def run(self):
-        with self.lock:
-            # self.cap = cv.VideoCapture(self.camera_port)
-            self.cap = cv.VideoCapture(self.camera_port, cv.CAP_DSHOW)
-            if not self.cap.isOpened():
-                self.running = False
-                print(f'Cannot init camera {self.camera_port}, please make sure the camera is installed correctly.')
-                self.cap.release()
-                return
+        self.cap = cv.VideoCapture(self.camera_port, cv.CAP_DSHOW)
+        if not self.cap.isOpened():
+            print(f'Cannot init camera {self.camera_port}, please make sure the camera is installed correctly.')
+            self.running = False
+            return
 
         while self.running:
-            with self.lock:
-                ret, frame = self.cap.read()
+            ret, frame = self.cap.read()
             if ret:
                 qt_image = convert_cv_qt(frame)
                 self.change_pixmap_signal.emit(qt_image)
@@ -64,104 +47,15 @@ class VideoThread(QThread):
                 print(f'Failed to capture image from camera {self.camera_port}')
                 self.running = False
 
-        with self.lock:
-            self.cap.release()
-            self.cap = None
+        self.cap.release()
 
     def capture(self):
-        with self.lock:
-            if not self.running:
-                return None
-
-            ret, frame = self.cap.read()
-        # cap.release()
-        if ret:
-            return frame
-        else:
+        if not self.running or not self.cap.isOpened():
             return None
+
+        ret, frame = self.cap.read()
+        return frame if ret else None
 
     def stop(self):
         self.running = False
         self.wait()
-
-
-"""
-Model Name: VideoCapture.py
-Description: load video for each camera using QTimer instead of threads.
-Author: Kun
-Last Modified: 03 Jul 2024
-"""
-from PyQt5.QtCore import QTimer
-from PyQt5.QtGui import QImage, QPixmap
-from PyQt5.QtWidgets import QLabel
-import cv2 as cv
-import numpy as np
-
-
-def convert_cv_qt(cv_img):
-    """Convert OpenCV image to Qt QImage."""
-    rgb_image = cv.cvtColor(cv_img, cv.COLOR_BGR2RGB)
-    h, w, ch = rgb_image.shape
-    bytes_per_line = ch * w
-    qt_image = QImage(rgb_image.data, w, h, bytes_per_line, QImage.Format_RGB888)
-    return qt_image
-
-
-class VideoCapture:
-    def __init__(self, camera_port=0, label=None, interval=30):
-        """
-        Initialize the video capture object.
-
-        Args:
-            camera_port (int): Camera port number.
-            label (QLabel): QLabel to display the video frames.
-            interval (int): Frame capture interval in milliseconds.
-        """
-        self.camera_port = camera_port
-        self.cap = None
-        self.timer = QTimer()
-        self.timer.timeout.connect(self.update_frame)
-        self.label = label
-        self.running = False
-        self.interval = interval
-
-    def start(self):
-        """Start capturing video."""
-        if not self.cap:
-            # self.cap = cv.VideoCapture(self.camera_port, cv.CAP_DSHOW)
-            self.cap = cv.VideoCapture(self.camera_port)
-            if not self.cap.isOpened():
-                print(f"Failed to open camera {self.camera_port}")
-                return
-
-        self.running = True
-        self.timer.start(self.interval)  # Start timer to update frames
-
-    def stop(self):
-        """Stop capturing video."""
-        self.running = False
-        self.timer.stop()
-        if self.cap:
-            self.cap.release()
-            self.cap = None
-
-    def update_frame(self):
-        """Capture the next video frame and update the label."""
-        if self.cap and self.running:
-            ret, frame = self.cap.read()
-            if ret:
-                qt_image = convert_cv_qt(frame)
-                if self.label:
-                    pixmap = QPixmap.fromImage(qt_image.scaled(640, 480))
-                    self.label.setPixmap(pixmap)
-            else:
-                print(f"Failed to capture frame from camera {self.camera_port}")
-
-    def capture(self):
-        """Capture a single frame."""
-        if self.cap and self.running:
-            ret, frame = self.cap.read()
-            if ret:
-                return frame
-        return None
-

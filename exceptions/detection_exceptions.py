@@ -59,6 +59,23 @@ class SerialNumberNotFoundException(Exception):
 
     def __str__(self):
         return f'{self.message}'
+    
+
+class AssetNumberNotFoundException(Exception):
+    """
+    Exception raised for error when serial number not found/
+
+    Attributes:
+        username -- thread that causes error.
+        message -- explanation of the error.
+    """
+
+    def __init__(self, message='Asset Number Not Found.'):
+        self.message = message
+        super().__init__(self.message)
+
+    def __str__(self):
+        return f'{self.message}'
 
 
 class LogoNotFoundException(Exception):

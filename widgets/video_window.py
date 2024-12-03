@@ -10,7 +10,7 @@ from PyQt5.QtWidgets import QFileDialog
 # from exceptions.detection_exceptions import DetectionException
 from interfaces.saver import ImageSaver
 from interfaces.detection_functions import *
-from video_thread import VideoThread, VideoCapture
+from .video_thread import VideoThread
 import cv2 as cv
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
@@ -22,7 +22,8 @@ _widget_dir = os.path.dirname(os.path.abspath(__file__))
 
 TRANSFER = {0: 'top', 1: 'bottom', 2: 'keyboard', 3: 'screen', 4: 'left', 5: 'right'}
 
-def save_to_pdf(defects_list: list[tuple[list[Defect], int]], name: str):
+def save_to_pdf(detected_imgs: list[tuple], defects_list: list[tuple[list[Defect], int]], name: str):
+    name = name.strip('\n')
     pdf_name = os.path.join(_widget_dir, f'../dataset/{name}.pdf')
     c = canvas.Canvas(pdf_name, pagesize=letter)
     width, height = letter
@@ -31,20 +32,48 @@ def save_to_pdf(defects_list: list[tuple[list[Defect], int]], name: str):
     idx = 0
 
     for defects, camera_port in defects_list:
+        detected_img = None
+        for img, port in detected_imgs:
+            if port == camera_port:
+                detected_img = img
+
+        # Insert detected_img at the beginning
+        if detected_img is not None:
+            if isinstance(detected_img, np.ndarray):
+                pil_detected_img = Image.fromarray(detected_img)  # Convert NumPy array to PIL image
+            else:
+                raise ValueError("Detected image must be a NumPy array")
+
+            detected_img_reader = ImageReader(pil_detected_img)  # Use PIL image directly
+            original_width, original_height = pil_detected_img.size
+            aspect_ratio = original_width / original_height
+            display_width = 500
+            display_height = display_width / aspect_ratio
+            if y_position - display_height < 100:  # end of page
+                c.showPage()
+                y_position = height - 50
+            # title 
+            c.drawString(50, y_position, f'Surface: {TRANSFER[port]}')
+            y_position -= 20
+            # image
+            c.drawImage(detected_img_reader, 50, y_position - display_height, width=display_width, height=display_height)
+            y_position -= (display_height + 20)
+
+            if y_position < 100:  # Check for end of page
+                c.showPage()
+                y_position = height - 50
+                
         # idx of defect
         for d in defects:
-            # cv.imshow('d image', d.image)
-            # cv.waitKey()
-            # cv.destroyAllWindows()
+            c.drawString(50, y_position, f'Defect {idx + 1}: {d.cls}')
             idx += 1
-            c.drawString(50, y_position, f'Defect {idx + 1}: {d.cls} on {TRANSFER[camera_port]}')
             y_position -= 20
 
             # xyxy of defect
             x1, y1, x2, y2 = d.xyxy
-            bbox_info = f'bbox: ({x1}, {y1}), ({x2}, {y1}), ({x1}, {y2}), ({x2}, {y2})'
-            c.drawString(50, y_position, bbox_info)
-            y_position -= 20
+            # bbox_info = f'bbox: ({x1}, {y1}), ({x2}, {y1}), ({x1}, {y2}), ({x2}, {y2})'
+            # c.drawString(50, y_position, bbox_info)
+            # y_position -= 20
 
             # Process image directly in memory
             if isinstance(d.image, np.ndarray):
@@ -105,17 +134,13 @@ class VideoBase(QObject):
         self.screen_model = models['screen']
 
     def start_detection(self):
-        for i, label in enumerate(self.thread_labels):
-            video_capture = VideoCapture(i, label)
-            video_capture.start()
-            self.threads.append(video_capture)
-
-
-        # for i in range(6):
-        #     thread = VideoThread(i)
-        #     thread.change_pixmap_signal.connect(getattr(self, f'set_image{i}'))
-        #     thread.start()
-        #     self.threads.append(thread)
+        for i in range(1, 6):
+            thread = VideoThread(i)
+            if not thread.running:
+                continue
+            thread.change_pixmap_signal.connect(getattr(self, f'set_image{i - 1}'))
+            thread.start()
+            self.threads.append(thread)
         # ------------------------------------------------------------------------------ #
         # self.select_images()
 
@@ -142,6 +167,7 @@ class VideoBase(QObject):
         defects_list = []
         models_list = [self.top_bottom_model, self.top_bottom_model, self.keyboard_model, self.screen_model]
         for img, camera_port in original_imgs:
+            camera_port += 1
             if img is None:
                 continue
             if camera_port == 0:  # detect logo and lot number
@@ -159,9 +185,14 @@ class VideoBase(QObject):
 
                 except BarcodeNotFoundException as e:
                     print(f'On port {camera_port} -> {e}')
+                
+                except AssetNumberNotFoundException as e:
+                    print(f'On port {camera_port} -> {e}')
+                    asset = 'Asset_Not_Found'
 
                 finally:
-                    detected_features['logo'], detected_features['lot'] = logo, lot
+                    detected_features['logo'], detected_features['lot'], detected_features['asset'] = \
+                        logo, lot, asset
                     print(f'Logo: {logo}, Lot Number: {lot}')
 
             if camera_port == 1:  # detect serial number
@@ -201,6 +232,10 @@ class VideoBase(QObject):
 
         # capture images
         # self.save_raw_info(folder_name='raw_imgs', imgs=original_imgs)
+        # for img, port in original_imgs:
+        #     cv.imshow(f"Port {port}", img)
+        #     cv.waitKey()
+        #     cv.destroyAllWindows()
 
         """
             Whether we need to store images over here, or we could store images on Control Panel, like:
@@ -291,8 +326,8 @@ class VideoBase(QObject):
         #                                                         "Image Files (*.png *.jpg *.jpeg *.bmp *.gif)",
         #                                                         options=options)
 
-        self.top_image_path = r'C:\Users\16379\Desktop\Dataset\dataset\images\train\image010.jpg'
-        self.bottom_image_path = r'C:\Users\16379\Desktop\Dataset\dataset\images\train\image011.jpg'
+        self.top_image_path = r'C:\Users\Kun\Desktop\demo\20240919124333_top.jpg'
+        self.bottom_image_path = r'C:\Users\Kun\Desktop\demo\009A9537.JPG'
         # self.keyboard_image_path = r'C:\Users\Kun\Desktop\demo\keyboard\20241003122511_keyboard.jpg'
 
         if self.top_image_path:
@@ -312,55 +347,16 @@ class VideoBase(QObject):
         original_imgs = []
         models_list = [self.top_bottom_model, self.top_bottom_model, self.keyboard_model, self.screen_model]
         for i, img in enumerate(self.imgs):
-            if img is None:
-                continue
-            original_imgs.append((np.copy(img), i))
-            if i == 0:  # detect logo and lot number
-                try:
-                    logo = detect_logo(img, self.logo_model)
-                    lot, asset = detect_lot_asset_barcode(img, self.lot_asset_barcode_model)
-                    # lot = detect_lot(img, self.lot_model)
-                    # detect_barcode(img, self.barcode_model)
-
-                except LogoNotFoundException as e:
-                    print(f'On port {i} -> {e}')
-                    logo = 'Logo_Not_Found'
-
-                except LotNumberNotFoundException as e:
-                    print(f'On port {i} -> {e}')
-                    lot = 'Lot_Not_Found'
-
-                except BarcodeNotFoundException as e:
-                    print(f'On port {i} -> {e}')
-
-                finally:
-                    detected_features['logo'], detected_features['lot'] = logo, lot
-                    print(f'Logo: {logo}, Lot Number: {lot}')
-
-            if i == 1:  # detect serial number
-                try:
-                    serial = detect_serial(img, self.serial_region_model, self.serial_model)
-                    print(f'Serial Number: {serial}')
-
-                except SerialNumberNotFoundException as e:
-                    print(f'On port {i} -> {e}')
-                    serial = 'Serial_Not_Found'
-
-                finally:
-                    detected_features['serial'] = serial
-
-            # if i == 2:
-            #     detected_img, defects_counts = detect_keyboard(img, models_list[i])
-            # else:
-            detected_img, defects_counts, defects = segment_with_sahi(img, 2, models_list[i])
-            if defects_counts is not None:
-                detected_features['defects'].append((defects_counts, i))
-            detected_imgs.append((np.copy(detected_img), i))
+            original_imgs.append((img, i))
+            
+        detected_imgs, detected_features, defects_list= self.detect_images([np.copy(imgs), port] for imgs, port in original_imgs)
+        lot = detected_features['lot']
 
         # self.save_raw_info(folder_name='original', imgs=original_imgs)
         # # cv_folder = lot + '_cv'
         # self.save_raw_info(folder_name='detected', imgs=detected_imgs)
-        # self.laptop_info.emit(detected_features)
+        save_to_pdf(detected_imgs, defects_list, lot)
+        self.laptop_info.emit(detected_features)
 
 
 if __name__ == '__main__':

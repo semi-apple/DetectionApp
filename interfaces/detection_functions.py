@@ -21,9 +21,10 @@ import numpy as np
 import random
 import pytesseract
 from exceptions.detection_exceptions import (LotNumberNotFoundException, LogoNotFoundException,
-                                             SerialNumberNotFoundException, BarcodeNotFoundException)
+                                             SerialNumberNotFoundException, BarcodeNotFoundException, 
+                                             AssetNumberNotFoundException)
 
-# pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
 
 from sahi import AutoDetectionModel
 from sahi.predict import get_sliced_prediction
@@ -69,6 +70,8 @@ def detect_lot_asset_barcode(original_img, model):
 
     if lot is None:
         raise LotNumberNotFoundException()
+    if asset is None:
+        raise AssetNumberNotFoundException()
     # if asset is None:
 
     return lot, asset
@@ -379,17 +382,17 @@ def segment_with_sahi(original_img, num_blocks, model):
 
     defects = filter_defects(defects, min_area=256, iou_threshold=0.9)
     stain_area_percentage = (stain_area / img_area) * 100 if img_area > 0 else 0
-    print(f"Detected {scratch_count} scratch(es)")
+    print(f"Detected {defects_counts[scratch_id]} scratch(es)")
     print(f"Stain area percentage: {stain_area_percentage}%")
-    cv.imshow('detected', laptop_region_img)
+    # cv.imshow('detected', laptop_region_img)
     # for d in defects:
     #     cv.imshow('defects', d.image)
     #     cv.waitKey()
     #     cv.destroyAllWindows()
 
     # cv.imshow('Image', original_img)
-    cv.waitKey()
-    cv.destroyAllWindows()
+    # cv.waitKey()
+    # cv.destroyAllWindows()
     detected_img = draw_multiple_rectangles(laptop_region_img, 1)
     defects_counts[0] = scratch_count
     defects_counts[1] = stain_count
@@ -427,8 +430,11 @@ def filter_defects(defects, min_area=1000, iou_threshold=0.5):
         # remain the highest marks
         best_defect = max(duplicates, key=lambda d: (d.xyxy[2] - d.xyxy[0]) * (d.xyxy[3] - d.xyxy[1]))
         final_defects.append(best_defect)
+        
+    # Get the top 5 largest defects
+    top_5_defects = sorted(final_defects, key=lambda d: (d.xyxy[2] - d.xyxy[0]) * (d.xyxy[3] - d.xyxy[1]), reverse=True)[:5]
 
-    return final_defects
+    return top_5_defects
 
 
 def calculate_iou(box1, box2):
