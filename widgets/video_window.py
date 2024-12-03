@@ -10,7 +10,7 @@ from PyQt5.QtWidgets import QFileDialog
 # from exceptions.detection_exceptions import DetectionException
 from interfaces.saver import ImageSaver
 from interfaces.detection_functions import *
-from .video_thread import VideoThread
+from .video_thread import VideoThread, VideoCapture
 import cv2 as cv
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
@@ -95,11 +95,17 @@ class VideoBase(QObject):
         self.screen_model = models['screen']
 
     def start_detection(self):
-        for i in range(6):
-            thread = VideoThread(i)
-            thread.change_pixmap_signal.connect(getattr(self, f'set_image{i}'))
-            thread.start()
-            self.threads.append(thread)
+        for i, label in enumerate(self.thread_labels):
+            video_capture = VideoCapture()
+            video_capture.start()
+            self.threads.append(video_capture)
+
+
+        # for i in range(6):
+        #     thread = VideoThread(i)
+        #     thread.change_pixmap_signal.connect(getattr(self, f'set_image{i}'))
+        #     thread.start()
+        #     self.threads.append(thread)
         # ------------------------------------------------------------------------------ #
         # self.select_images()
 
