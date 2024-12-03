@@ -22,44 +22,47 @@ _widget_dir = os.path.dirname(os.path.abspath(__file__))
 
 TRANSFER = {0: 'top', 1: 'bottom', 2: 'keyboard', 3: 'screen', 4: 'left', 5: 'right'}
 
-def save_to_pdf(defects: list, name: str):
+def save_to_pdf(defects_list: list, name: str):
     pdf_name = os.path.join(_widget_dir, f'../dataset/{name}.pdf')
     c = canvas.Canvas(pdf_name, pagesize=letter)
     width, height = letter
 
     y_position = height - 50
+    idx = 0
 
-    for idx, d in enumerate(defects):
+    for defects, camera_port in defects_list:
         # idx of defect
-        c.drawString(50, y_position, f'Defect {idx + 1}: {d.cls}')
-        y_position -= 20
+        for d in defects:
+            idx += 1
+            c.drawString(50, y_position, f'Defect {idx + 1}: {d.cls} on {TRANSFER[camera_port]}')
+            y_position -= 20
 
-        # xyxy of defect
-        bbox_info = f'bbox: {d.xyxy}'
-        c.drawString(50, y_position, bbox_info)
-        y_position -= 20
+            # xyxy of defect
+            bbox_info = f'bbox: {d.xyxy}'
+            c.drawString(50, y_position, bbox_info)
+            y_position -= 20
 
-        # Process image directly in memory
-        if isinstance(d.image, np.ndarray):
-            pil_image = Image.fromarray(d.image)  # Convert NumPy array to PIL image
-        else:
-            raise ValueError("Image must be a NumPy array")
+            # Process image directly in memory
+            if isinstance(d.image, np.ndarray):
+                pil_image = Image.fromarray(d.image)  # Convert NumPy array to PIL image
+            else:
+                raise ValueError("Image must be a NumPy array")
 
-        img_reader = ImageReader(pil_image)  # Use PIL image directly
+            img_reader = ImageReader(pil_image)  # Use PIL image directly
 
-        # Calculate display size based on aspect ratio
-        original_width, original_height = pil_image.size
-        aspect_ratio = original_width / original_height
+            # Calculate display size based on aspect ratio
+            original_width, original_height = pil_image.size
+            aspect_ratio = original_width / original_height
 
-        display_width = 500
-        display_height = display_width / aspect_ratio
+            display_width = 500
+            display_height = display_width / aspect_ratio
 
-        c.drawImage(img_reader, 50, y_position - display_height, width=display_width, height=display_height)
-        y_position -= 220
+            c.drawImage(img_reader, 50, y_position - display_height, width=display_width, height=display_height)
+            y_position -= 220
 
-        if y_position < 100:  # end of page
-            c.showPage()
-            y_position = height - 50
+            if y_position < 100:  # end of page
+                c.showPage()
+                y_position = height - 50
 
     c.save()
     print(f'PDF has saved to {pdf_name}')
@@ -96,7 +99,7 @@ class VideoBase(QObject):
 
     def start_detection(self):
         for i, label in enumerate(self.thread_labels):
-            video_capture = VideoCapture()
+            video_capture = VideoCapture(i, label)
             video_capture.start()
             self.threads.append(video_capture)
 
@@ -128,6 +131,7 @@ class VideoBase(QObject):
         detected_imgs = []
         detected_features = {}
         # detected_img = None
+        detected_info = []
         defects_list = []
         models_list = [self.top_bottom_model, self.top_bottom_model, self.keyboard_model, self.screen_model]
         for img, camera_port in original_imgs:
@@ -172,11 +176,12 @@ class VideoBase(QObject):
             # else:
             detected_img, defects_counts, defects = segment_with_sahi(img, 2, models_list[camera_port])
             if defects_counts is not None:
-                detected_features['detected_info'].append((defects_counts, camera_port))
+                detected_info.append((defects_counts, camera_port))
             if defects is not None:
                 defects_list.append((defects, camera_port))
             detected_imgs.append((np.copy(detected_img), camera_port))
 
+        detected_features['detected_info'] = detected_info
         return detected_imgs, detected_features, defects_list
 
     def capture_images(self):

@@ -157,7 +157,7 @@ class VideoCapture:
             else:
                 print(f"Failed to capture frame from camera {self.camera_port}")
 
-    def capture_frame(self):
+    def capture(self):
         """Capture a single frame."""
         if self.cap and self.running:
             ret, frame = self.cap.read()
