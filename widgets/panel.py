@@ -39,7 +39,7 @@ _widget_dir = os.path.dirname(os.path.abspath(__file__))
 
 def init_dataset():
     root_path = os.path.abspath(os.path.join(_widget_dir, '..'))
-    dataset_dir_path = os.path.join(root_path, 'Dataset')
+    dataset_dir_path = os.path.join(root_path, 'dataset')
     if not os.path.exists(dataset_dir_path):
         os.makedirs(dataset_dir_path)
 
@@ -98,7 +98,7 @@ class PanelBase(QObject):
     def set_detected_features(self, detected_features):
         scratch_counts = 0
         stain_counts = 0
-        for defects_counts, _ in detected_features['defects']:
+        for defects_counts, _ in detected_features['detected_info']:
             scratch_counts += defects_counts[0]
             stain_counts += defects_counts[1]
         logo, lot, serial = \
@@ -132,4 +132,4 @@ if __name__ == '__main__':
     cv.waitKey()
     cv.destroyAllWindows()
     defects = [d, ]
-    save_to_pdf(defects, 'test')
+    # save_to_pdf(defects, 'test')

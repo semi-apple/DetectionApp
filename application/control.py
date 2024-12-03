@@ -70,7 +70,7 @@ def init_models():
 
 def check_dataset():
     root_path = os.path.abspath(os.path.join(_APP_DIR, '..'))
-    dataset_dir_path = os.path.join(root_path, 'Dataset')
+    dataset_dir_path = os.path.join(root_path, 'dataset')
     if not os.path.exists(dataset_dir_path):
         os.makedirs(dataset_dir_path)
         dataset_file = os.path.join(dataset_dir_path, 'dataset.csv')
