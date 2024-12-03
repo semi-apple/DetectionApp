@@ -10,7 +10,7 @@ from PyQt5.QtWidgets import QFileDialog
 # from exceptions.detection_exceptions import DetectionException
 from interfaces.saver import ImageSaver
 from interfaces.detection_functions import *
-from .video_thread import VideoThread, VideoCapture
+from video_thread import VideoThread, VideoCapture
 import cv2 as cv
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
@@ -361,3 +361,19 @@ class VideoBase(QObject):
         # # cv_folder = lot + '_cv'
         # self.save_raw_info(folder_name='detected', imgs=detected_imgs)
         # self.laptop_info.emit(detected_features)
+
+
+if __name__ == '__main__':
+    img_path = '/Users/kunzhou/Desktop/demo/20240919121719_top.jpg'
+    image = cv.imread(img_path)
+    xyxy = (10, 10, 500, 500)
+    xyxy2 = (100, 100, 117, 117)
+    img2 = image[100: 117, 100: 117]
+    img = image[10: 500, 10: 500]
+    d1 = Defect(img, 'stain', xyxy)
+    d2 = Defect(img2, 'stain', xyxy2)
+    # cv.imshow('test', image)
+    # cv.waitKey()
+    # cv.destroyAllWindows()
+    defects = [d1, ]
+    save_to_pdf([(defects, 0), ([d2, ], 1)], 'test')

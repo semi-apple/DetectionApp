@@ -28,7 +28,7 @@ from exceptions.detection_exceptions import (LotNumberNotFoundException, LogoNot
 from sahi import AutoDetectionModel
 from sahi.predict import get_sliced_prediction
 from ultralytics import YOLO
-from classes import Defect
+from .classes import Defect
 
 TRANSFER = {1: 'screen', 0: 'top', 2: 'left', 3: 'right', 4: 'screen', 5: 'keyboard'}
 script_dir = os.path.dirname(os.path.abspath(__file__))
