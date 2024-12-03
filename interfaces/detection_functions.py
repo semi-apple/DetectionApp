@@ -28,7 +28,7 @@ from exceptions.detection_exceptions import (LotNumberNotFoundException, LogoNot
 from sahi import AutoDetectionModel
 from sahi.predict import get_sliced_prediction
 from ultralytics import YOLO
-from .classes import Defect
+from classes import Defect
 
 TRANSFER = {1: 'screen', 0: 'top', 2: 'left', 3: 'right', 4: 'screen', 5: 'keyboard'}
 script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -51,6 +51,7 @@ def detect_lot_asset_barcode(original_img, model):
     lot, asset = '', ''
     results = model(original_img)
     classes = list(model.names.values())
+    print(classes)
     classes_ids = [classes.index(cls) for cls in classes]
     asset_id = classes.index('asset')
     lot_id = classes.index('lot')
@@ -312,6 +313,7 @@ def segment_with_sahi(original_img, num_blocks, model):
 
     rx1, ry1, rx2, ry2 = map(int, region_xyxy_list)
     laptop_region_img = original_img[ry1: ry2, rx1: rx2]
+    cp_laptop_region_img = np.copy(laptop_region_img)
 
     detection_model_seg = AutoDetectionModel.from_pretrained(
         model_type='yolov8',
@@ -361,31 +363,100 @@ def segment_with_sahi(original_img, num_blocks, model):
 
             color_number = classes_ids.index(defect_id)
             color = colors[color_number]
+            x1, y1, x2, y2 = prediction.bbox.to_xyxy()
+            # store defect image
+            defect_img = cp_laptop_region_img[y1: y2, x1: x2]
+            d = Defect(image=defect_img, cls=classes[defect_id], xyxy=(x1, y1, x2, y2))
+            defects.append(d)
+
             # cv.polylines(original_img, [points], isClosed=True, color=color, thickness=2)
             cv.polylines(laptop_region_img, [points], isClosed=True, color=color, thickness=2)
             # cv.fillPoly(img, [points], colors[color_number])
 
             label = f"{classes[defect_id]}: {prediction.score.value * 100:.2f}%"
-            x1, y1, x2, y2 = prediction.bbox.to_xyxy()
             # cv.putText(original_img, label, (x1, y1 - 10), cv.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
             cv.putText(laptop_region_img, label, (x1, y1 - 10), cv.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
 
-            # store defect image
-            defect_img = np.copy(laptop_region_img[y1: y2, x1: x2])
-            d = Defect(image=defect_img, cls=classes[defect_id], xyxy=(x1, y1, x2, y2))
-            defects.append(d)
-
+    defects = filter_defects(defects, min_area=256, iou_threshold=0.9)
     stain_area_percentage = (stain_area / img_area) * 100 if img_area > 0 else 0
     print(f"Detected {defects_counts[scratch_id]} scratch(es)")
     print(f"Stain area percentage: {stain_area_percentage}%")
-    # cv.imshow('Image', laptop_region_img)
-    # # cv.imshow('Image', original_img)
-    # cv.waitKey()
-    # cv.destroyAllWindows()
+    cv.imshow('detected', laptop_region_img)
+    for d in defects:
+        cv.imshow('defects', d.image)
+        cv.waitKey()
+        cv.destroyAllWindows()
+
+    # cv.imshow('Image', original_img)
+    cv.waitKey()
+    cv.destroyAllWindows()
     detected_img = draw_multiple_rectangles(laptop_region_img, 1)
     defects_counts[0] = scratch_count
     defects_counts[1] = stain_count
     return detected_img, defects_counts, defects
+
+
+def filter_defects(defects, min_area=1000, iou_threshold=0.5):
+    """Remove a defects which is too small or redundant.
+
+    Args:
+        defects (list[Defect]): defects list
+        min_area (int): min area
+        iou_threshold (float): IoU
+
+    Returns:
+        list[Defect]: filtered defects list。
+    """
+    # remove defects that are very small
+    filtered_defects = [d for d in defects if (d.xyxy[2] - d.xyxy[0]) * (d.xyxy[3] - d.xyxy[1]) >= min_area]
+
+    # remove redundant defects
+    final_defects = []
+    visited = set()  # stores the defects that has been visited
+
+    for i, d1 in enumerate(filtered_defects):
+        if i in visited:
+            continue
+
+        duplicates = [d1]  # store duplicated defects
+        for j, d2 in enumerate(filtered_defects):
+            if i != j and calculate_iou(d1.xyxy, d2.xyxy) > iou_threshold:
+                duplicates.append(d2)
+                visited.add(j)  # marked as processed
+
+        # remain the highest marks
+        best_defect = max(duplicates, key=lambda d: (d.xyxy[2] - d.xyxy[0]) * (d.xyxy[3] - d.xyxy[1]))
+        final_defects.append(best_defect)
+
+    return final_defects
+
+
+def calculate_iou(box1, box2):
+    """Calculate IoU of two defects
+
+    Args:
+        box1 (tuple[int]): bbox of the first defect (x1, y1, x2, y2)。
+        box2 (tuple[int]): bbox of the second defect (x1, y1, x2, y2)。
+
+    Returns:
+        float: IoU
+    """
+    x1_inter = max(box1[0], box2[0])
+    y1_inter = max(box1[1], box2[1])
+    x2_inter = min(box1[2], box2[2])
+    y2_inter = min(box1[3], box2[3])
+
+    inter_area = max(0, x2_inter - x1_inter) * max(0, y2_inter - y1_inter)
+
+    box1_area = (box1[2] - box1[0]) * (box1[3] - box1[1])
+    box2_area = (box2[2] - box2[0]) * (box2[3] - box2[1])
+
+    union_area = box1_area + box2_area - inter_area
+
+    if union_area == 0:
+        return 0
+
+    return inter_area / union_area
 
 
 def detect_barcode(original_img, barcode_model):
@@ -556,10 +627,12 @@ def draw_multiple_rectangles(image, port):
 
 
 if __name__ == "__main__":
-    img = cv.imread(r'C:\Users\16379\Desktop\Dataset\dataset\images\train\image007.jpg')
-    model = YOLO(r'C:\Users\16379\Desktop\DetectionApp\models\lot_asset_barcode.pt')
+    img = cv.imread('/Users/kunzhou/Desktop/demo/20240919121824_top.jpg')
+    model = YOLO('/Users/kunzhou/Desktop/DetectionApp/models/lot_asset_barcode.pt')
+    sahi_model = YOLO('/Users/kunzhou/Desktop/DetectionApp/models/top_bottom.pt')
     # ocr_model = YOLO(r'C:\Users\16379\Desktop\DetectionApp\models\lot.pt')
-    lot, asset = detect_lot_asset_barcode(img, model)
+    # lot, asset = detect_lot_asset_barcode(img, model)
+    segment_with_sahi(img, 2, sahi_model)
     # lot = detect_lot(img, ocr_model=ocr_model)
     # print(lot)
     # print(lot, asset)

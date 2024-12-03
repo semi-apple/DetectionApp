@@ -33,9 +33,9 @@ def save_to_pdf(defects_list: list[tuple[list[Defect], int]], name: str):
     for defects, camera_port in defects_list:
         # idx of defect
         for d in defects:
-            cv.imshow('d image', d.image)
-            cv.waitKey()
-            cv.destroyAllWindows()
+            # cv.imshow('d image', d.image)
+            # cv.waitKey()
+            # cv.destroyAllWindows()
             idx += 1
             c.drawString(50, y_position, f'Defect {idx + 1}: {d.cls} on {TRANSFER[camera_port]}')
             y_position -= 20
@@ -56,13 +56,16 @@ def save_to_pdf(defects_list: list[tuple[list[Defect], int]], name: str):
 
             # Calculate display size based on aspect ratio
             original_width, original_height = pil_image.size
-            aspect_ratio = original_width / original_height
 
-            display_width = 500
-            display_height = display_width / aspect_ratio
-
-            c.drawImage(img_reader, 50, y_position - display_height, width=display_width, height=display_height)
-            y_position -= 220
+            if original_width < 500:
+                c.drawImage(img_reader, 50, y_position - original_height, width=original_width, height=original_height)
+                y_position -= (original_height + 20)
+            else:
+                aspect_ratio = original_width / original_height
+                display_width = 500
+                display_height = display_width / aspect_ratio
+                c.drawImage(img_reader, 50, y_position - display_height, width=display_width, height=display_height)
+                y_position -= (display_height + 20)
 
             if y_position < 100:  # end of page
                 c.showPage()
@@ -94,10 +97,10 @@ class VideoBase(QObject):
         self.top_bottom_model = models['top_bottom']
         self.lot_asset_barcode_model = models['lot_asset_barcode']
         self.logo_model = models['logo']
-        self.lot_model = models['lot']
+        # self.lot_model = models['lot']
         self.serial_region_model = models['serial_region']
         self.serial_model = models['serial']
-        self.barcode_model = models['barcode']
+        # self.barcode_model = models['barcode']
         self.keyboard_model = models['keyboard']
         self.screen_model = models['screen']
 
@@ -145,8 +148,6 @@ class VideoBase(QObject):
                 try:
                     lot, asset = detect_lot_asset_barcode(img, self.lot_asset_barcode_model)
                     logo = detect_logo(img, self.logo_model)
-                    lot = detect_lot(img, self.lot_model)
-                    detect_barcode(img, self.barcode_model)
 
                 except LogoNotFoundException as e:
                     print(f'On port {camera_port} -> {e}')

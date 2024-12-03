@@ -1,114 +1,168 @@
-# import pytest
-# from unittest.mock import MagicMock, patch
-# import numpy as np
-# from PyQt5.QtGui import QPixmap, QImage
-# from PyQt5.QtWidgets import QPushButton, QLabel
-# import os
-# import sys
-# current_dir = os.path.dirname(os.path.abspath(__file__))
-# project_root = os.path.abspath(os.path.join(current_dir, '../../'))
-# sys.path.append(project_root)
-# from widgets.video_window import VideoBase
+import os
+import sys
+current_dir = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.abspath(os.path.join(current_dir, '../../'))
+sys.path.append(project_root)
+
+from unittest.mock import patch, MagicMock
+import numpy as np
+from widgets.video_window import save_to_pdf, VideoBase, VideoCapture
+from interfaces.classes import Defect
+
+
+def test_save_to_pdf():
+    """Test that save_to_pdf generates a PDF correctly."""
+    defects_list = [
+        ([Defect(image=np.zeros((100, 100, 3), dtype=np.uint8), cls="scratch", xyxy=(10, 10, 50, 50))], 0)
+    ]
+    name = "test_pdf"
+
+    with patch("widgets.video_window.canvas.Canvas") as MockCanvas:
+        mock_canvas_instance = MockCanvas.return_value
+
+        save_to_pdf(defects_list, name)
+
+        # Assert that canvas methods are called
+        mock_canvas_instance.drawString.assert_called()  # Verify text was written
+        mock_canvas_instance.drawImage.assert_called()  # Verify image was added
+        mock_canvas_instance.save.assert_called_once()  # Verify PDF was saved
+
+
+def test_start_detection(mocker):
+    """Test that start_detection initializes video capture threads."""
+    mock_labels = [MagicMock() for _ in range(6)]
+    mock_buttons = {
+        "detect_button": MagicMock(),
+        "capture_button": MagicMock(),
+        "stop_button": MagicMock(),
+    }
+
+    # Mock all required models
+    mock_models = {
+        "top_bottom": MagicMock(),
+        "lot_asset_barcode": MagicMock(),
+        "logo": MagicMock(),
+        "lot": MagicMock(),
+        "serial_region": MagicMock(),
+        "serial": MagicMock(),
+        "barcode": MagicMock(),
+        "keyboard": MagicMock(),
+        "screen": MagicMock(),
+    }
+
+    # Mock VideoCapture
+    mock_video_capture_instance = MagicMock()
+    mock_video_capture_instance.start = MagicMock()
+    mocker.patch(
+        "widgets.video_window.VideoCapture",
+        side_effect=lambda *args, **kwargs: MagicMock(start=MagicMock())
+    )
+
+    # Initialize VideoBase with mock models
+    video_base = VideoBase(thread_labels=mock_labels, buttons=mock_buttons, models=mock_models)
+
+    video_base.start_detection()
+
+    # Assert that threads are initialized
+    assert len(video_base.threads) == len(mock_labels)
+    for thread in video_base.threads:
+        thread.start.assert_called_once()
+
+
+def test_detect_images(mocker):
+    """Test that detect_images processes input correctly."""
+    mock_model = MagicMock()
+    mock_model.names = {0: 'asset', 1: 'lot', 2: 'barcode'}
+    mock_model.return_value = MagicMock()
+
+    mock_models = {
+        "top_bottom": MagicMock(),
+        "lot_asset_barcode": mock_model,
+        "logo": MagicMock(),
+        "lot": MagicMock(),
+        "serial_region": MagicMock(),
+        "serial": MagicMock(),
+        "barcode": MagicMock(),
+        "keyboard": MagicMock(),
+        "screen": MagicMock(),
+    }
+
+    mock_buttons = {
+        "detect_button": MagicMock(),
+        "capture_button": MagicMock(),
+        "stop_button": MagicMock(),
+    }
+
+    mocker.patch("interfaces.detection_functions.segment_with_sahi", return_value=(None, [1, 0], [MagicMock()]))
+
+    video_base = VideoBase(thread_labels=[], buttons=mock_buttons, models=mock_models)
+
+    original_imgs = [(np.zeros((480, 640, 3), dtype=np.uint8), 0)]
+    detected_imgs, detected_features, defects_list = video_base.detect_images(original_imgs)
+
+    assert len(detected_imgs) == 1
+    assert detected_features["detected_info"] == [[1, 0]]
+    assert len(defects_list) == 1
 #
-# @pytest.fixture
-# def setup_videobase():
-#     thread_labels = [MagicMock(spec=QLabel) for _ in range(6)]
-#     buttons = {
-#         'detect_button': MagicMock(spec=QPushButton),
-#         'capture_button': MagicMock(spec=QPushButton),
-#         'stop_button': MagicMock(spec=QPushButton),
+#
+# def test_capture_images(mocker):
+#     """Test that capture_images captures and processes images correctly."""
+#     mock_labels = [MagicMock() for _ in range(6)]
+#     mock_buttons = {
+#         "detect_button": MagicMock(),
+#         "capture_button": MagicMock(),
+#         "stop_button": MagicMock(),
 #     }
 #
-#     models = {
-#         'top_bottom': MagicMock(),
-#         'logo': MagicMock(),
-#         'lot': MagicMock(),
-#         'serial_region': MagicMock(),
-#         'serial': MagicMock(),
-#         'barcode': MagicMock(),
-#         'keyboard': MagicMock(),
-#         'screen': MagicMock(),
-#     }
+#     video_base = VideoBase(thread_labels=mock_labels, buttons=mock_buttons, models={})
 #
-#     vb = VideoBase(thread_labels=thread_labels, buttons=buttons, models=models)
-#     return vb, thread_labels, buttons, models
-#
-# def test_start_detection(setup_videobase):
-#     vb, thread_labels, buttons, models = setup_videobase
-#
-#     with patch('main.VideoWindow.VideoThread') as MockVideoThread:
-#         mock_thread = MagicMock()
-#         MockVideoThread.return_value = mock_thread
-#
-#         vb.start_detection()
-#
-#         # assert len(vb.threads) == 6
-#         # assert MockVideoThread.call_count == 6
-#         for i, thread in enumerate(vb.threads):
-#             thread.start.assert_called_once()
-#             thread.change_pixmap_signal.connect.assert_called_with(getattr(vb, f'set_image{i}'))
-#
-# def test_stop_detection(setup_videobase):
-#     vb, thread_labels, buttons, models = setup_videobase
-#
+#     # Mock threads
 #     mock_thread = MagicMock()
-#     vb.threads = [mock_thread for _ in range(6)]
+#     mock_thread.capture.return_value = np.zeros((480, 640, 3), dtype=np.uint8)
+#     video_base.threads = [mock_thread for _ in range(6)]
 #
-#     vb.stop_detection()
+#     # Mock detect_images and save_to_pdf
+#     mocker.patch("your_module.VideoBase.detect_images", return_value=([], {}, []))
+#     mocker.patch("your_module.save_to_pdf")
 #
-#     for thread in vb.threads:
+#     video_base.capture_images()
+#
+#     # Assert that capture is called for each thread
+#     for thread in video_base.threads:
+#         thread.capture.assert_called_once()
+#
+#     # Assert that save_to_pdf was called
+#     save_to_pdf = mocker.patch("your_module.save_to_pdf")
+#     save_to_pdf.assert_called_once()
+#
+#
+# def test_stop_detection():
+#     """Test that stop_detection stops threads and clears labels."""
+#     mock_labels = [MagicMock() for _ in range(6)]
+#     mock_buttons = {
+#         "detect_button": MagicMock(),
+#         "capture_button": MagicMock(),
+#         "stop_button": MagicMock(),
+#     }
+#
+#     video_base = VideoBase(thread_labels=mock_labels, buttons=mock_buttons, models={})
+#
+#     # Mock threads
+#     mock_thread = MagicMock()
+#     video_base.threads = [mock_thread for _ in range(6)]
+#
+#     video_base.stop_detection()
+#
+#     # Assert that threads are stopped
+#     for thread in video_base.threads:
 #         thread.stop.assert_called_once()
 #
-#     assert vb.threads == []
-#
-#     for label in thread_labels:
+#     # Assert that labels are cleared
+#     for label in mock_labels:
 #         label.clear.assert_called_once()
 #
-# def test_display_image_on_label(setup_videobase):
-#     vb, thread_labels, buttons, models = setup_videobase
+#     # Ensure threads list is empty
+#     assert len(video_base.threads) == 0
 #
-#     mock_image_path = 'test_image.jpg'
-#     mock_label = MagicMock(spec=QLabel)
-#
-#     fake_image = np.random.randint(0, 255, (100, 100, 3), dtype=np.uint8)
-#     with patch('cv2.imread', return_value=fake_image), patch('cv2.cvtColor', return_value=fake_image):
-#         vb.display_image_on_label(mock_image_path, mock_label)
-#
-#     mock_label.setPixmap.assert_called_once()
-#
-# def test_detect_images(setup_videobase):
-#     vb, thread_labels, buttons, models = setup_videobase
-#
-#     fake_image = np.random.randint(0, 255, (100, 100, 3), dtype=np.uint8)
-#     original_imgs = [(fake_image, 0), (fake_image, 1)]
-#
-#     with patch('main.VideoWindow.detect_logo', return_value='MockLogo') as mock_detect_logo, \
-#          patch('main.VideoWindow.detect_lot', return_value='MockLot') as mock_detect_lot, \
-#          patch('main.VideoWindow.detect_serial', return_value='MockSerial') as mock_detect_serial, \
-#          patch('main.VideoWindow.detect_keyboard', return_value=(fake_image, {'keyboard_defects': 1})), \
-#          patch('main.VideoWindow.segment_with_sahi', return_value=(fake_image, {'defects': 1})):
-#
-#         detected_imgs, detected_features = vb.detect_images(original_imgs)
-#
-#         assert len(detected_imgs) == len(original_imgs)
-#         assert 'logo' in detected_features
-#         assert detected_features['logo'] == 'MockLogo'
-#         assert detected_features['lot'] == 'MockLot'
-#         assert detected_features['serial'] == 'MockSerial'
-#
-# def test_capture_images(setup_videobase):
-#     vb, thread_labels, buttons, models = setup_videobase
-#
-#     fake_image = np.random.randint(0, 255, (100, 100, 3), dtype=np.uint8)
-#     mock_thread = MagicMock()
-#     mock_thread.running = True
-#     mock_thread.capture.return_value = fake_image
-#     vb.threads = [mock_thread]
-#
-#     with patch.object(vb, 'detect_images', return_value=([], {})) as mock_detect_images:
-#         vb.capture_images()
-#
-#         mock_thread.capture.assert_called_once()
-#         mock_detect_images.assert_called_once()
 #
 #
