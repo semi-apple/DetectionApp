@@ -6,13 +6,13 @@ Upon successful login, the main Detection Application window is opened. This is 
 Detection Application project.
 
 Classes:
-- LoginWindow: A QWidget-based class that creates the login interface.
+- LoginWindow: A QDialog-based class that creates the login interface.
 
 Functions:
 - initUI(): Initializes the user interface with input fields and login button.
 - handleLogin(): Handles the login button click event to validate user credentials.
+- getUserInfo(): Validates the entered username and password.
 - open_main_window(): Opens the main Detection Application window upon successful login.
-
 
 Author: Kun
 Last Modified: 10 Jul 2024
@@ -23,10 +23,18 @@ from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtWidgets import QMessageBox, QLabel, QLineEdit, QPushButton, QVBoxLayout, QApplication, QDialog
 from exceptions.user_login_exception import UserNotFoundException, IncorrectPasswordException
 
+# Predefined user data (this could later be replaced with a database or API integration)
 USERS = {'Admin': {'password': '123456', 'level': 0}, }
 
 
 class LoginWindow(QDialog):
+    """
+    LoginWindow class that handles user login interface and logic.
+
+    Attributes:
+        accepted (pyqtSignal): Signal emitted on successful login with the username and user level.
+        rejected (pyqtSignal): Signal emitted on failed login or cancellation.
+    """
     accepted = pyqtSignal(str, int)
     rejected = pyqtSignal()
 
@@ -60,6 +68,9 @@ class LoginWindow(QDialog):
         self.resize(300, 120)
 
     def handleLogin(self):
+        """
+        Handle the login button click event, validate credentials, and emit signals accordingly.
+        """
         # Placeholder functionality for login
         try:
             username, user_level = self.getUserInfo()
@@ -73,6 +84,16 @@ class LoginWindow(QDialog):
         # self.close()
 
     def getUserInfo(self):
+        """
+        Validate the entered username and password.
+
+        Returns:
+            tuple: A tuple containing the username and user level.
+
+        Raises:
+            UserNotFoundException: If the username is not found in the USERS dictionary.
+            IncorrectPasswordException: If the password is incorrect for the provided username.
+        """
         return 'Admin', 0
         # username = selfs.text_username.text()
         # password = self.text_password.text()

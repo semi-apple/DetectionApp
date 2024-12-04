@@ -29,10 +29,23 @@ from typing import Optional
 
 
 def get_app() -> Optional[QCoreApplication]:
+    """
+    Get the current QApplication instance.
+
+    Returns:
+        Optional[QCoreApplication]: The current application instance if it exists, otherwise None.
+    """
     return QApplication.instance()
 
 
 class DetectionApp(QMainWindow):
+    """
+    Main application window for the detection app.
+
+    Attributes:
+        init_panel (pyqtSignal): Signal to initialize UI components.
+        controller (Controller): Handles the logic and interactions of the app.
+    """
     init_panel = pyqtSignal(list)
 
     def __init__(self, parent=None):
@@ -49,6 +62,13 @@ class DetectionApp(QMainWindow):
         self.init_panel.connect(self.controller.init_panel_base)
 
     def start_detection(self, username, level):
+        """
+        Start the detection process and display the main window.
+
+        Args:
+            username (str): The username of the person starting the detection.
+            level (str): The level of detection to initialize.
+        """
         if username is not None and level is not None:
             self.controller.username = username
             self.controller.level = level

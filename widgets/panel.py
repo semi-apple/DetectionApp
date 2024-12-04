@@ -6,22 +6,23 @@ such as serial numbers and device models. The information is saved to a CSV file
 in the 'Dataset' directory.
 
 Classes:
-- ControlPanel: A QWidget-based class that creates the control panel interface.
+- PanelBase: A QObject-based class that creates the control panel logic.
 
 Functions:
-- initUI(): Initializes the user interface.
-- add_input_line(label_name, input_widget, layout): Adds a labeled input line to the layout.
-- on_click(): Handles the save button click event to save the input data to the CSV file.
+- init_dataset(): Initializes the dataset by creating the CSV file if it doesn't already exist.
+- handle_signal(): Connects button signals to their respective slot functions.
+- save_to_dataset(): Handles the save button click event to save the input data to the CSV file.
 - clear_all_inputs(): Clears all input fields.
+- set_detected_features(): Updates input fields with detected information from the detection process.
+- grade(): Sets a grade based on detected defects.
 
-Widget:
-- Input Line:
-    - model_input:
-    - lot_number_input:
-    - serial_number_input:
-    - scratch_input:
-    - stain_input:
-    - grade_input:
+Widgets (Input Lines):
+- model_input
+- lot_number_input
+- serial_number_input
+- scratch_input
+- stain_input
+- grade_input
 
 Author: Kun
 Last Modified: 10 Jul 2024
@@ -38,6 +39,9 @@ _widget_dir = os.path.dirname(os.path.abspath(__file__))
 
 
 def init_dataset():
+    """
+    Initializes the dataset directory and CSV file. Creates the directory and file with headers if they don't exist.
+    """
     root_path = os.path.abspath(os.path.join(_widget_dir, '..'))
     dataset_dir_path = os.path.join(root_path, 'dataset')
     if not os.path.exists(dataset_dir_path):
@@ -52,7 +56,17 @@ def init_dataset():
 
 
 class PanelBase(QObject):
+    """
+    The control panel class that manages user input, saves data to the dataset, and updates fields based on detection results.
+    """
     def __init__(self, input_lines, panel_buttons):
+        """
+        Initializes the PanelBase class.
+
+        Args:
+            input_lines (dict): A dictionary mapping input line names to their corresponding input widgets.
+            panel_buttons (dict): A dictionary mapping button names to their corresponding button widgets.
+        """
         super(PanelBase, self).__init__()
         self.input_lines = input_lines
         self.panel_buttons = panel_buttons
@@ -60,6 +74,9 @@ class PanelBase(QObject):
         init_dataset()
 
     def handle_signal(self):
+        """
+        Connects the panel buttons to their respective functions.
+        """
         assert 'save_button' in self.panel_buttons
         assert 'clear_button' in self.panel_buttons
 
@@ -96,6 +113,12 @@ class PanelBase(QObject):
 
     @pyqtSlot(dict)
     def set_detected_features(self, detected_features):
+        """
+        Updates input fields with detected features from the detection process.
+
+        Args:
+            detected_features (dict): Detected features including logo, lot, serial, and defect counts.
+        """
         scratch_counts = 0
         stain_counts = 0
         for defects_counts, _ in detected_features['detected_info']:
@@ -118,7 +141,19 @@ class PanelBase(QObject):
         # self.save_to_dataset()
 
     def grade(self, grade_info):
+        """
+        Sets a grade based on the defect counts.
+        Still need to be implemented.
+
+        Args:
+            grade_info (dict): A dictionary containing defect counts.
+        """
         scratch_count, stain_count = grade_info['scratch'], grade_info['stain']
-        self.input_lines['grade_input'].setText('C')
+
+        # Basic grading logic (can be expanded as needed)
+        if scratch_count > 10 or stain_count > 10:
+            self.input_lines['grade_input'].setText('C')
+        else:
+            self.input_lines['grade_input'].setText('A')
 
 

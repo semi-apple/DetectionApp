@@ -68,9 +68,9 @@ def detect_lot_asset_barcode(original_img, model):
         # elif cls_id == barcode_id:
         #     process_barcode(detected_region)
 
-    if lot is None:
+    if lot is None or len(lot) == 0:
         raise LotNumberNotFoundException()
-    if asset is None:
+    if asset is None or len(asset) == 0:
         raise AssetNumberNotFoundException()
     # if asset is None:
 
@@ -113,127 +113,6 @@ def process_barcode(barcode_img):
     cv.destroyAllWindows()
 
     return barcode_img
-
-
-def defects_segment(img, model):
-    laptop_model_path = os.path.join(models_dir_path, 'laptop.pt')
-    laptop_model = YOLO(laptop_model_path)
-    region_results = laptop_model(img)
-    region_xyxy_list = region_results[0].boxes.xyxy.tolist()[0]
-    rx1, ry1, rx2, ry2 = map(int, region_xyxy_list)
-    laptop_region_img = img[ry1: ry2, rx1: rx2]
-
-    classes = list(model.names.values())
-    classes_ids = [classes.index(cls) for cls in classes]
-    conf = 0.3
-
-    # chip_id = classes.index('chip')  # id 0
-    # dent_id = classes.index('dent')  # id 1
-    # missing_id = classes.index('missing')  # id 2
-    scratch_id = classes.index('scratch')  # id 3
-    stain_id = classes.index('stain')  # id 4
-
-    # defects_counts = [0, 0, 0, 0, 0]  # list index is defect id. For example, defects_count[0] is the number of chips
-    # scratch_count, stain_count, chip_count, missing_count, dent_count = 0, 0, 0, 0, 0
-
-    results = model.predict(laptop_region_img, conf=conf, imgsz=1280)
-    colors = [random.choices(range(256), k=3) for _ in classes_ids]
-    # print("Results:", results)
-
-    img_area = laptop_region_img.shape[0] * laptop_region_img.shape[1]
-    stain_area = 0
-    try:
-        for result in results:
-            for mask, box in zip(result.masks.xy, result.boxes):
-                # print(f"Mask: {mask}")
-                # print(f"Mask shape: {mask.shape}")
-                defect_id = int(box.cls[0])
-                # defects_counts[defect_id] += 1
-
-                if mask.size == 0 or len(mask.shape) != 2 or mask.shape[1] != 2:
-                    # print("Error: Mask points do not have the correct shape")
-                    continue
-
-                points = np.int32(mask)
-                # print(f"Points: {points}")
-                # print(f"Points shape: {points.shape}")
-
-                if defect_id == stain_id:
-                    stain_area += cv.contourArea(points)
-
-                color_number = classes_ids.index(defect_id)
-                color = colors[color_number]
-                cv.polylines(laptop_region_img, [points], isClosed=True, color=color, thickness=2)
-                # cv.fillPoly(img, [points], colors[color_number])
-
-                label = f"{classes[defect_id]}: {box.conf[0] * 100:.2f}%"
-                x1, y1, _, _ = map(int, box.xyxy[0])
-                cv.putText(laptop_region_img, label, (x1, y1 - 10), cv.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
-
-        # for result in results:
-        #     for boxes in result.boxes:
-        #         x1, y1, x2, y2 = map(int, boxes.xyxy[0])
-        #         defect_id = int(boxes.cls[0])
-        #         color_number = classes_ids.index(defect_id)
-        #         color = colors[color_number]
-        #         thickness = 3
-        #         cv.rectangle(img, (x1, y1), (x2, y2), color, thickness)
-        #         label = f"{classes[defect_id]}: {boxes.conf[0]}"
-        #         x1, y1, _, _ = map(int, boxes.xyxy[0])
-        #         cv.putText(img, label, (x1, y1 - 10), cv.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
-
-        stain_area_percentage = (stain_area / img_area) * 100 if img_area > 0 else 0
-        # print(f"Detected {defects_counts[scratch_id]} scratch(es)")
-        print(f"Stain area percentage: {stain_area_percentage}%")
-        # cv.imshow('Image', laptop_region_img)
-        # cv.waitKey()
-        # cv.destroyAllWindows()
-        detected_img = draw_multiple_rectangles(laptop_region_img, 1)
-        return detected_img
-
-    except Exception as e:
-        print(f"Error during segmentation: {e}")
-        return laptop_region_img
-
-
-def defects_detect(img, model):
-    classes = list(model.names.values())
-    classes_ids = [classes.index(cls) for cls in classes]
-
-    conf = 0.2
-
-    scratch_id = classes.index('scratch')
-    stain_id = classes.index('stain')
-    chip_id = classes.index('chip')
-    missing_id = classes.index('missing')
-    dent_id = classes.index('dent')
-
-    scratch_count, stain_count = 0, 0
-
-    results = model.predict(img, conf=conf)
-    colors = [random.choices(range(256), k=3) for _ in classes_ids]
-    # print("Results:", results)
-    try:
-        for result in results:
-            for boxes in result.boxes:
-                x1, y1, x2, y2 = map(int, boxes.xyxy[0])
-                defect_id = int(boxes.cls[0])
-                color_number = classes_ids.index(defect_id)
-                color = colors[color_number]
-                thickness = 3
-                cv.rectangle(img, (x1, y1), (x2, y2), color, thickness)
-                label = f"{classes[defect_id]}: {boxes.conf[0]}"
-                x1, y1, _, _ = map(int, boxes.xyxy[0])
-                cv.putText(img, label, (x1, y1 - 10), cv.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
-
-        cv.imshow('Image', img)
-        cv.waitKey()
-        cv.destroyAllWindows()
-        return img
-
-    except Exception as e:
-        print(f"Error during segmentation: {e}")
-        return img
 
 
 def detect_keyboard(original_img, model):
@@ -382,7 +261,7 @@ def segment_with_sahi(original_img, num_blocks, model):
 
     defects = filter_defects(defects, min_area=256, iou_threshold=0.9)
     stain_area_percentage = (stain_area / img_area) * 100 if img_area > 0 else 0
-    print(f"Detected {defects_counts[scratch_id]} scratch(es)")
+    print(f"Detected {scratch_count} scratch(es)")
     print(f"Stain area percentage: {stain_area_percentage}%")
     # cv.imshow('detected', laptop_region_img)
     # for d in defects:
@@ -390,11 +269,16 @@ def segment_with_sahi(original_img, num_blocks, model):
     #     cv.waitKey()
     #     cv.destroyAllWindows()
 
-    # cv.imshow('Image', original_img)
-    # cv.waitKey()
-    # cv.destroyAllWindows()
-    detected_img = draw_multiple_rectangles(laptop_region_img, 1)
+    cv.imshow('Image', original_img)
+    cv.waitKey()
+    cv.destroyAllWindows()
+    detected_img = laptop_region_img
+    # if scratch_count == 0 or stain_count == 0:
+    #     detected_img = draw_multiple_rectangles(original_img)
+    # else:
+    #     detected_img = draw_multiple_rectangles(laptop_region_img)
     defects_counts[0] = scratch_count
+
     defects_counts[1] = stain_count
     return detected_img, defects_counts, defects
 
@@ -576,15 +460,18 @@ def detect_serial(img, ser_region_model, ser_model):
     return serial
 
 
-def draw_multiple_rectangles(image, port):
+def draw_multiple_rectangles(image):
+    img_path = r'C:\Users\Kun\Desktop\demo\20240919125037_top.jpg'
+    # img_path = '/Users/kunzhou/Desktop/demo/20240919121824_top.jpg'
+    img = cv.imread(img_path)
     drawing = False
     start_point = (-1, -1)
     rectangles = []
 
-    target_width = 1280
-    target_height = 860
+    # target_width = 1280
+    # target_height = 860
 
-    image = cv.resize(image, (target_width, target_height))
+    # image = cv.resize(image, (target_width, target_height))
 
     def draw_rectangle(event, x, y, flags, param):
         nonlocal drawing, start_point, rectangles
@@ -612,7 +499,7 @@ def draw_multiple_rectangles(image, port):
                 cv.rectangle(temp_image, rect[0], rect[1], (0, 255, 0), 2)
             cv.imshow('Image', temp_image)
 
-    temp_image = image.copy()
+    # temp_image = image.copy()
 
     cv.namedWindow('Image')
     cv.setMouseCallback('Image', draw_rectangle)
@@ -620,7 +507,7 @@ def draw_multiple_rectangles(image, port):
     cv.imshow('Image', image)
 
     while True:
-        key = cv.waitKey(1) & 0xFF
+        key = cv.waitKey(0) & 0xFF
         if key == ord(' '):
             break
 
@@ -632,13 +519,140 @@ def draw_multiple_rectangles(image, port):
     return image
 
 
+# --------------------------------- archived --------------------------------------------- #
+def defects_segment(img, model):
+    laptop_model_path = os.path.join(models_dir_path, 'laptop.pt')
+    laptop_model = YOLO(laptop_model_path)
+    region_results = laptop_model(img)
+    region_xyxy_list = region_results[0].boxes.xyxy.tolist()[0]
+    rx1, ry1, rx2, ry2 = map(int, region_xyxy_list)
+    laptop_region_img = img[ry1: ry2, rx1: rx2]
+
+    classes = list(model.names.values())
+    classes_ids = [classes.index(cls) for cls in classes]
+    conf = 0.3
+
+    # chip_id = classes.index('chip')  # id 0
+    # dent_id = classes.index('dent')  # id 1
+    # missing_id = classes.index('missing')  # id 2
+    scratch_id = classes.index('scratch')  # id 3
+    stain_id = classes.index('stain')  # id 4
+
+    # defects_counts = [0, 0, 0, 0, 0]  # list index is defect id. For example, defects_count[0] is the number of chips
+    # scratch_count, stain_count, chip_count, missing_count, dent_count = 0, 0, 0, 0, 0
+
+    results = model.predict(laptop_region_img, conf=conf, imgsz=1280)
+    colors = [random.choices(range(256), k=3) for _ in classes_ids]
+    # print("Results:", results)
+
+    img_area = laptop_region_img.shape[0] * laptop_region_img.shape[1]
+    stain_area = 0
+    try:
+        for result in results:
+            for mask, box in zip(result.masks.xy, result.boxes):
+                # print(f"Mask: {mask}")
+                # print(f"Mask shape: {mask.shape}")
+                defect_id = int(box.cls[0])
+                # defects_counts[defect_id] += 1
+
+                if mask.size == 0 or len(mask.shape) != 2 or mask.shape[1] != 2:
+                    # print("Error: Mask points do not have the correct shape")
+                    continue
+
+                points = np.int32(mask)
+                # print(f"Points: {points}")
+                # print(f"Points shape: {points.shape}")
+
+                if defect_id == stain_id:
+                    stain_area += cv.contourArea(points)
+
+                color_number = classes_ids.index(defect_id)
+                color = colors[color_number]
+                cv.polylines(laptop_region_img, [points], isClosed=True, color=color, thickness=2)
+                # cv.fillPoly(img, [points], colors[color_number])
+
+                label = f"{classes[defect_id]}: {box.conf[0] * 100:.2f}%"
+                x1, y1, _, _ = map(int, box.xyxy[0])
+                cv.putText(laptop_region_img, label, (x1, y1 - 10), cv.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
+
+        # for result in results:
+        #     for boxes in result.boxes:
+        #         x1, y1, x2, y2 = map(int, boxes.xyxy[0])
+        #         defect_id = int(boxes.cls[0])
+        #         color_number = classes_ids.index(defect_id)
+        #         color = colors[color_number]
+        #         thickness = 3
+        #         cv.rectangle(img, (x1, y1), (x2, y2), color, thickness)
+        #         label = f"{classes[defect_id]}: {boxes.conf[0]}"
+        #         x1, y1, _, _ = map(int, boxes.xyxy[0])
+        #         cv.putText(img, label, (x1, y1 - 10), cv.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
+
+        stain_area_percentage = (stain_area / img_area) * 100 if img_area > 0 else 0
+        # print(f"Detected {defects_counts[scratch_id]} scratch(es)")
+        print(f"Stain area percentage: {stain_area_percentage}%")
+        # cv.imshow('Image', laptop_region_img)
+        # cv.waitKey()
+        # cv.destroyAllWindows()
+        detected_img = draw_multiple_rectangles(laptop_region_img, 1)
+        return detected_img
+
+    except Exception as e:
+        print(f"Error during segmentation: {e}")
+        return laptop_region_img
+
+
+def defects_detect(img, model):
+    classes = list(model.names.values())
+    classes_ids = [classes.index(cls) for cls in classes]
+
+    conf = 0.2
+
+    scratch_id = classes.index('scratch')
+    stain_id = classes.index('stain')
+    chip_id = classes.index('chip')
+    missing_id = classes.index('missing')
+    dent_id = classes.index('dent')
+
+    scratch_count, stain_count = 0, 0
+
+    results = model.predict(img, conf=conf)
+    colors = [random.choices(range(256), k=3) for _ in classes_ids]
+    # print("Results:", results)
+    try:
+        for result in results:
+            for boxes in result.boxes:
+                x1, y1, x2, y2 = map(int, boxes.xyxy[0])
+                defect_id = int(boxes.cls[0])
+                color_number = classes_ids.index(defect_id)
+                color = colors[color_number]
+                thickness = 3
+                cv.rectangle(img, (x1, y1), (x2, y2), color, thickness)
+                label = f"{classes[defect_id]}: {boxes.conf[0]}"
+                x1, y1, _, _ = map(int, boxes.xyxy[0])
+                cv.putText(img, label, (x1, y1 - 10), cv.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
+
+        cv.imshow('Image', img)
+        cv.waitKey()
+        cv.destroyAllWindows()
+        return img
+
+    except Exception as e:
+        print(f"Error during segmentation: {e}")
+        return img
+
+# ---------------------------------------------------------------------------------------------- #
+
+
 if __name__ == "__main__":
-    img = cv.imread('/Users/kunzhou/Desktop/demo/20240919121824_top.jpg')
-    model = YOLO('/Users/kunzhou/Desktop/DetectionApp/models/lot_asset_barcode.pt')
-    sahi_model = YOLO('/Users/kunzhou/Desktop/DetectionApp/models/top_bottom.pt')
+    img_path = r'C:\Users\Kun\Desktop\demo\20240919125037_top.jpg'
+    # img_path = '/Users/kunzhou/Desktop/demo/20240919121824_top.jpg'
+    img = cv.imread(img_path)
+    # model = YOLO('/Users/kunzhou/Desktop/DetectionApp/models/lot_asset_barcode.pt')
+    # sahi_model = YOLO('/Users/kunzhou/Desktop/DetectionApp/models/top_bottom.pt')
     # ocr_model = YOLO(r'C:\Users\16379\Desktop\DetectionApp\models\lot.pt')
     # lot, asset = detect_lot_asset_barcode(img, model)
-    segment_with_sahi(img, 2, sahi_model)
+    draw_multiple_rectangles(img)
+    # segment_with_sahi(img, 2, sahi_model)
     # lot = detect_lot(img, ocr_model=ocr_model)
     # print(lot)
     # print(lot, asset)

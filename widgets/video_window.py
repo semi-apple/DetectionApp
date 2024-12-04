@@ -23,6 +23,14 @@ _widget_dir = os.path.dirname(os.path.abspath(__file__))
 TRANSFER = {0: 'top', 1: 'bottom', 2: 'keyboard', 3: 'screen', 4: 'left', 5: 'right'}
 
 def save_to_pdf(detected_imgs: list[tuple], defects_list: list[tuple[list[Defect], int]], name: str):
+    """
+    Generates a PDF report summarizing the detected defects and includes full detected images.
+
+    Args:
+        detected_imgs (list[tuple]): List of detected images and their associated camera ports.
+        defects_list (list[tuple[list[Defect], int]]): Detected defects grouped by camera port.
+        name (str): Name of the PDF file.
+    """
     name = name.strip('\n')
     pdf_name = os.path.join(_widget_dir, f'../dataset/{name}.pdf')
     c = canvas.Canvas(pdf_name, pagesize=letter)
@@ -105,9 +113,17 @@ def save_to_pdf(detected_imgs: list[tuple], defects_list: list[tuple[list[Defect
 
 
 class VideoBase(QObject):
-    laptop_info = pyqtSignal(dict)
+    laptop_info = pyqtSignal(dict)  # Signal to emit detection results
 
     def __init__(self, thread_labels=None, buttons=None, models=None):
+        """
+        Initializes the VideoBase class.
+
+        Args:
+            thread_labels (list): List of PyQt5 labels for displaying video feeds.
+            buttons (dict): Dictionary of buttons for starting/stopping detection.
+            models (dict): Dictionary of detection models.
+        """
         super().__init__()
         self.threads = []
         self.thread_labels = thread_labels
@@ -134,7 +150,7 @@ class VideoBase(QObject):
         self.screen_model = models['screen']
 
     def start_detection(self):
-        for i in range(1, 6):
+        for i in range(1, 7):
             thread = VideoThread(i)
             if not thread.running:
                 continue
@@ -143,8 +159,6 @@ class VideoBase(QObject):
             self.threads.append(thread)
         # ------------------------------------------------------------------------------ #
         # self.select_images()
-
-
 
     def display_image_on_label(self, image_path, label):
         img = cv.imread(image_path)
@@ -159,6 +173,15 @@ class VideoBase(QObject):
         label.setPixmap(scaled_pixmap)
 
     def detect_images(self, original_imgs: list) -> object:
+        """
+        Performs detection on the captured images.
+
+        Args:
+            original_imgs (list): List of original images captured by cameras.
+
+        Returns:
+            tuple: Detected images, features, and defect lists.
+        """
         logo, lot, serial = '', '', ''
         detected_imgs = []
         detected_features = {}
@@ -167,35 +190,34 @@ class VideoBase(QObject):
         defects_list = []
         models_list = [self.top_bottom_model, self.top_bottom_model, self.keyboard_model, self.screen_model]
         for img, camera_port in original_imgs:
-            camera_port += 1
+            # camera_port += 1
             if img is None:
                 continue
-            if camera_port == 0:  # detect logo and lot number
+            if camera_port == 1:  # detect logo and lot number
+                logo, lot, asset = None, None, None  # Initialize variables
+                # Detect logo
                 try:
-                    lot, asset = detect_lot_asset_barcode(img, self.lot_asset_barcode_model)
                     logo = detect_logo(img, self.logo_model)
-
                 except LogoNotFoundException as e:
                     print(f'On port {camera_port} -> {e}')
                     logo = 'Logo_Not_Found'
 
+                # Detect lot number
+                try:
+                    lot, asset = detect_lot_asset_barcode(img, self.lot_asset_barcode_model)
                 except LotNumberNotFoundException as e:
                     print(f'On port {camera_port} -> {e}')
                     lot = 'Lot_Not_Found'
-
-                except BarcodeNotFoundException as e:
-                    print(f'On port {camera_port} -> {e}')
-                
+                    asset = 'Asset_Not_Found'
                 except AssetNumberNotFoundException as e:
                     print(f'On port {camera_port} -> {e}')
                     asset = 'Asset_Not_Found'
+                
+                detected_features['logo'], detected_features['lot'], detected_features['asset'] = \
+                    logo, lot, asset
+                print(f'Logo: {logo}, Lot Number: {lot}')
 
-                finally:
-                    detected_features['logo'], detected_features['lot'], detected_features['asset'] = \
-                        logo, lot, asset
-                    print(f'Logo: {logo}, Lot Number: {lot}')
-
-            if camera_port == 1:  # detect serial number
+            if camera_port == 2:  # detect serial number
                 try:
                     serial = detect_serial(img, self.serial_region_model, self.serial_model)
                     print(f'Serial Number: {serial}')
@@ -236,6 +258,8 @@ class VideoBase(QObject):
         #     cv.imshow(f"Port {port}", img)
         #     cv.waitKey()
         #     cv.destroyAllWindows()
+        
+        # return
 
         """
             Whether we need to store images over here, or we could store images on Control Panel, like:
@@ -254,7 +278,7 @@ class VideoBase(QObject):
         # self.save_raw_info(folder_name='original', imgs=original_imgs)
         # # cv_folder = lot + '_cv'
         # self.save_raw_info(folder_name='detected', imgs=detected_imgs)
-        save_to_pdf(defects_list, lot)
+        save_to_pdf(detected_imgs, defects_list, lot)
         self.laptop_info.emit(detected_features)
 
     def stop_detection(self):
@@ -274,6 +298,7 @@ class VideoBase(QObject):
 
     @pyqtSlot(QImage)
     def set_image0(self, image):
+        """Update thread labels based on the returned frame from thread.run()"""
         self.thread_labels[0].setPixmap(QPixmap.fromImage(image)
                                         .scaled(self.thread_labels[0].size(), Qt.KeepAspectRatio))
 
