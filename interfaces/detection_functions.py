@@ -30,6 +30,7 @@ from sahi import AutoDetectionModel
 from sahi.predict import get_sliced_prediction
 from ultralytics import YOLO
 from .classes import Defect
+import threading
 
 TRANSFER = {1: 'screen', 0: 'top', 2: 'left', 3: 'right', 4: 'screen', 5: 'keyboard'}
 script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -49,6 +50,7 @@ def detect_lot_asset_barcode(original_img, model):
        Returns:
            Dictionary containing detected lot number, asset number, and barcode images or extracted text.
        """
+    print(f"detect_lot_asset_barcode running in thread: {threading.current_thread().name}")
     lot, asset = '', ''
     results = model(original_img)
     classes = list(model.names.values())
@@ -82,9 +84,9 @@ def process_lot_number(lot_img):
     gray_img = cv.cvtColor(lot_img, cv.COLOR_BGR2GRAY)
     _, thresh = cv.threshold(gray_img, 200, 250, cv.THRESH_BINARY)
 
-    # cv.imshow("Barcode Image", thresh)
-    # cv.waitKey()
-    # cv.destroyAllWindows()
+    cv.imshow("Lot Image", thresh)
+    cv.waitKey()
+    cv.destroyAllWindows()
     lot_number = pytesseract.image_to_string(thresh)
     print(f"Detected lot number: {lot_number}")
 
@@ -96,9 +98,9 @@ def process_asset_number(asset_img):
     gray_img = cv.cvtColor(asset_img, cv.COLOR_BGR2GRAY)
     _, thresh = cv.threshold(gray_img, 200, 250, cv.THRESH_BINARY)
 
-    # cv.imshow("Barcode Image", thresh)
-    # cv.waitKey()
-    # cv.destroyAllWindows()
+    cv.imshow("asset Image", thresh)
+    cv.waitKey()
+    cv.destroyAllWindows()
     asset_number = pytesseract.image_to_string(thresh)
     print(f"Detected asset number: {asset_number}")
 
@@ -269,10 +271,11 @@ def segment_with_sahi(original_img, num_blocks, model):
     #     cv.waitKey()
     #     cv.destroyAllWindows()
 
-    cv.imshow('Image', original_img)
-    cv.waitKey()
+    cv.imshow('detected image', original_img)
+    cv.waitKey(100)
     cv.destroyAllWindows()
     detected_img = laptop_region_img
+    # detected_img = draw_multiple_rectangles(laptop_region_img)
     # if scratch_count == 0 or stain_count == 0:
     #     detected_img = draw_multiple_rectangles(original_img)
     # else:
@@ -468,10 +471,10 @@ def draw_multiple_rectangles(image):
     start_point = (-1, -1)
     rectangles = []
 
-    # target_width = 1280
-    # target_height = 860
+    target_width = 1280
+    target_height = 860
 
-    # image = cv.resize(image, (target_width, target_height))
+    image = cv.resize(image, (target_width, target_height))
 
     def draw_rectangle(event, x, y, flags, param):
         nonlocal drawing, start_point, rectangles
@@ -646,12 +649,15 @@ def defects_detect(img, model):
 if __name__ == "__main__":
     img_path = r'C:\Users\Kun\Desktop\demo\20240919125037_top.jpg'
     # img_path = '/Users/kunzhou/Desktop/demo/20240919121824_top.jpg'
+    cam = cv.VideoCapture(0, cv.CAP_DSHOW)
+    ret, frame = cam.read()
     img = cv.imread(img_path)
+    frame = frame[100: 200, 100: 200]
     # model = YOLO('/Users/kunzhou/Desktop/DetectionApp/models/lot_asset_barcode.pt')
     # sahi_model = YOLO('/Users/kunzhou/Desktop/DetectionApp/models/top_bottom.pt')
     # ocr_model = YOLO(r'C:\Users\16379\Desktop\DetectionApp\models\lot.pt')
     # lot, asset = detect_lot_asset_barcode(img, model)
-    draw_multiple_rectangles(img)
+    draw_multiple_rectangles(frame)
     # segment_with_sahi(img, 2, sahi_model)
     # lot = detect_lot(img, ocr_model=ocr_model)
     # print(lot)

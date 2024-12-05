@@ -160,18 +160,6 @@ class VideoBase(QObject):
         # ------------------------------------------------------------------------------ #
         # self.select_images()
 
-    def display_image_on_label(self, image_path, label):
-        img = cv.imread(image_path)
-        self.imgs.append(img)
-        img_rgb = cv.cvtColor(img, cv.COLOR_BGR2RGB)
-        h, w, ch = img_rgb.shape
-        bytes_per_line = ch * w
-        q_img = QImage(img_rgb.data, w, h, bytes_per_line, QImage.Format_RGB888)
-        pixmap = QPixmap.fromImage(q_img)
-        label_size = label.size()
-        scaled_pixmap = pixmap.scaled(label_size, Qt.KeepAspectRatio, Qt.SmoothTransformation)
-        label.setPixmap(scaled_pixmap)
-
     def detect_images(self, original_imgs: list) -> object:
         """
         Performs detection on the captured images.
@@ -193,6 +181,10 @@ class VideoBase(QObject):
             # camera_port += 1
             if img is None:
                 continue
+            cv.imshow(f"image", img)
+            cv.waitKey()
+            cv.destroyAllWindows()
+            print(f"detect_images running in thread: {threading.current_thread().name}")
             if camera_port == 1:  # detect logo and lot number
                 logo, lot, asset = None, None, None  # Initialize variables
                 # Detect logo
@@ -232,7 +224,7 @@ class VideoBase(QObject):
             # if camera_port == 2:
             #     detected_img, defects_counts = detect_keyboard(img, models_list[camera_port])
             # else:
-            detected_img, defects_counts, defects = segment_with_sahi(img, 2, models_list[camera_port])
+            detected_img, defects_counts, defects = segment_with_sahi(img, 2, models_list[camera_port - 1])
             if defects_counts is not None:
                 detected_info.append((defects_counts, camera_port))
             if defects is not None:
@@ -251,6 +243,11 @@ class VideoBase(QObject):
             if thread.running:
                 original_img = thread.capture()  # original image
                 original_imgs.append((np.copy(original_img), thread.camera_port))
+
+        # self.top_image_path = r'C:\Users\Kun\Desktop\demo\20240919124333_top.jpg'
+        # self.bottom_image_path = r'C:\Users\Kun\Desktop\demo\009A9537.JPG'
+        # original_imgs.append((np.copy(cv.imread(self.top_image_path)), 1))
+        # original_imgs.append((np.copy(cv.imread(self.bottom_image_path)), 2))
 
         # capture images
         # self.save_raw_info(folder_name='raw_imgs', imgs=original_imgs)
@@ -272,7 +269,7 @@ class VideoBase(QObject):
             One bad thing is that it is not automatic.
         """
 
-        detected_imgs, detected_features, defects_list= self.detect_images([np.copy(imgs), port] for imgs, port in original_imgs)
+        detected_imgs, detected_features, defects_list = self.detect_images([np.copy(imgs), port] for imgs, port in original_imgs)
         lot = detected_features['lot']
 
         # self.save_raw_info(folder_name='original', imgs=original_imgs)
@@ -331,6 +328,17 @@ class VideoBase(QObject):
         self.stop_detection()
 
 # ----------------------------------- test ----------------------------------------------------------------- #  
+    def display_image_on_label(self, image_path, label):
+        img = cv.imread(image_path)
+        self.imgs.append(img)
+        img_rgb = cv.cvtColor(img, cv.COLOR_BGR2RGB)
+        h, w, ch = img_rgb.shape
+        bytes_per_line = ch * w
+        q_img = QImage(img_rgb.data, w, h, bytes_per_line, QImage.Format_RGB888)
+        pixmap = QPixmap.fromImage(q_img)
+        label_size = label.size()
+        scaled_pixmap = pixmap.scaled(label_size, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+        label.setPixmap(scaled_pixmap)
 
     def select_images(self):
         self.imgs = []
@@ -372,7 +380,7 @@ class VideoBase(QObject):
         original_imgs = []
         models_list = [self.top_bottom_model, self.top_bottom_model, self.keyboard_model, self.screen_model]
         for i, img in enumerate(self.imgs):
-            original_imgs.append((img, i))
+            original_imgs.append((img, i + 1))
             
         detected_imgs, detected_features, defects_list= self.detect_images([np.copy(imgs), port] for imgs, port in original_imgs)
         lot = detected_features['lot']
