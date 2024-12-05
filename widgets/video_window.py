@@ -181,9 +181,9 @@ class VideoBase(QObject):
             # camera_port += 1
             if img is None:
                 continue
-            cv.imshow(f"image", img)
-            cv.waitKey()
-            cv.destroyAllWindows()
+            # cv.imshow(f"image", img)
+            # cv.waitKey()
+            # cv.destroyAllWindows()
             print(f"detect_images running in thread: {threading.current_thread().name}")
             if camera_port == 1:  # detect logo and lot number
                 logo, lot, asset = None, None, None  # Initialize variables

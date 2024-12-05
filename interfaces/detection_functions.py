@@ -31,6 +31,7 @@ from sahi.predict import get_sliced_prediction
 from ultralytics import YOLO
 from .classes import Defect
 import threading
+import time
 
 TRANSFER = {1: 'screen', 0: 'top', 2: 'left', 3: 'right', 4: 'screen', 5: 'keyboard'}
 script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -272,7 +273,8 @@ def segment_with_sahi(original_img, num_blocks, model):
     #     cv.destroyAllWindows()
 
     cv.imshow('detected image', original_img)
-    cv.waitKey(100)
+    cv.waitKey(1)
+    # time.sleep(10)
     cv.destroyAllWindows()
     detected_img = laptop_region_img
     # detected_img = draw_multiple_rectangles(laptop_region_img)
