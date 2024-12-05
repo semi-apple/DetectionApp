@@ -17,6 +17,7 @@ from reportlab.pdfgen import canvas
 from reportlab.lib.utils import ImageReader
 from PIL import Image
 import numpy as np
+from interfaces.classes import GUIHandler
 
 _widget_dir = os.path.dirname(os.path.abspath(__file__))
 
@@ -137,6 +138,7 @@ class VideoBase(QObject):
         self.buttons['capture_button'].clicked.connect(self.capture_images)
         # self.buttons['capture_button'].clicked.connect(self.capture_selected_images)
         self.buttons['stop_button'].clicked.connect(self.stop_detection)
+        self.gui_handler = GUIHandler()
 
     def init_models(self, models):
         self.top_bottom_model = models['top_bottom']

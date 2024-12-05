@@ -7,6 +7,9 @@ Classes:
 Author: Kun
 Last Modified: 02 Dec 2024
 """
+from PyQt5.QtCore import QObject, pyqtSignal, pyqtSlot
+import cv2 as cv
+import numpy as np
 
 
 class Defect:
@@ -23,4 +26,18 @@ class Defect:
         self.image = image
         self.xyxy = xyxy
 
+
+class GUIHandler(QObject):
+    display_signal = pyqtSignal(np.ndarray)
+
+    def __init__(self):
+        super().__init__()
+        self.display_signal.connect(self.display_image)
+
+    @pyqtSlot(np.ndarray)
+    def display_image(self, image):
+        """Show image in main thread"""
+        cv.imshow('Image Display', image)
+        cv.waitKey()
+        cv.destroyAllWindows()
 

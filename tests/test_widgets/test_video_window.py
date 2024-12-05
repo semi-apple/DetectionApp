@@ -6,7 +6,7 @@ sys.path.append(project_root)
 
 from unittest.mock import patch, MagicMock
 import numpy as np
-from widgets.video_window import save_to_pdf, VideoBase, VideoCapture
+from widgets.video_window import save_to_pdf, VideoBase
 from interfaces.classes import Defect
 
 
