@@ -226,7 +226,7 @@ class VideoBase(QObject):
             # if camera_port == 2:
             #     detected_img, defects_counts = detect_keyboard(img, models_list[camera_port])
             # else:
-            detected_img, defects_counts, defects = segment_with_sahi(img, 2, models_list[camera_port - 1])
+            detected_img, defects_counts, defects = segment_with_sahi(img, 2, models_list[camera_port - 1], self.gui_handler)
             if defects_counts is not None:
                 detected_info.append((defects_counts, camera_port))
             if defects is not None:
