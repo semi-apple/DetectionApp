@@ -4,7 +4,7 @@ Description: create a window widget to present camera information.
 Author: Kun
 Last Modified: 03 Jul 2024
 """
-from PyQt5.QtCore import QObject, pyqtSlot, Qt, pyqtSignal
+from PyQt5.QtCore import QObject, pyqtSlot, Qt, pyqtSignal, QThread
 from PyQt5.QtGui import QImage, QPixmap
 from PyQt5.QtWidgets import QFileDialog
 # from exceptions.detection_exceptions import DetectionException
@@ -152,11 +152,14 @@ class VideoBase(QObject):
     def start_detection(self):
         for i in range(1, 7):
             thread = VideoThread(i)
+            
             if not thread.running:
                 continue
+            qThread = QThread()
+            thread.moveToThread(qThread)
             thread.change_pixmap_signal.connect(getattr(self, f'set_image{i - 1}'))
             thread.start()
-            self.threads.append(thread)
+            self.threads.append((thread, qThread))
         # ------------------------------------------------------------------------------ #
         # self.select_images()
 
@@ -238,7 +241,7 @@ class VideoBase(QObject):
         original_imgs = []
 
         # set default logo capture camera as 0
-        for thread in self.threads:
+        for thread, _ in self.threads:
             # if thread.running and thread.camera_port == 1: # on port 0
             if thread.running:
                 original_img = thread.capture()  # original image
@@ -279,8 +282,10 @@ class VideoBase(QObject):
         self.laptop_info.emit(detected_features)
 
     def stop_detection(self):
-        for thread in self.threads:
+        for thread, qThread in self.threads:
             thread.stop()
+            qThread.quit()
+            qThread.wait()
         self.threads = []
         for label in self.thread_labels:
             label.clear()

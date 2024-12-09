@@ -25,15 +25,15 @@ if %errorlevel% neq 0 (
 )
 python -c "import sys; print(sys.executable)"
 
-echo "Setting VSCode interpreter..."
-if not exist .vscode{
-    mkdir .vscode
-}
+@REM echo "Setting VSCode interpreter..."
+@REM if not exist .vscode{
+@REM     mkdir .vscode
+@REM }
 
-echo "Changing interpreter path..."
-echo { > .vscode\settings.json
-echo    "python.pythonPath": "%cd%\venv\Scripts\python.exe" >> .vscode\settings.json
-echo } >> .vscode\settings.json
+@REM echo "Changing interpreter path..."
+@REM echo { > .vscode\settings.json
+@REM echo    "python.pythonPath": "%cd%\venv\Scripts\python.exe" >> .vscode\settings.json
+@REM echo } >> .vscode\settings.json
 
 
 echo "Updating pip..."

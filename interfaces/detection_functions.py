@@ -35,7 +35,7 @@ import time
 
 TRANSFER = {1: 'screen', 0: 'top', 2: 'left', 3: 'right', 4: 'screen', 5: 'keyboard'}
 script_dir = os.path.dirname(os.path.abspath(__file__))
-print(f'script path: {script_dir}')
+# print(f'script path: {script_dir}')
 models_dir_path = os.path.join(script_dir, '../models')
 
 
