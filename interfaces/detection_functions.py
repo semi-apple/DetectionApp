@@ -188,7 +188,7 @@ def detect_keyboard(original_img, model):
     # return original_img
 
 
-def segment_with_sahi(original_img, num_blocks, model, gui_handler):
+def segment_with_sahi(original_img, num_blocks, model):
     laptop_model_path = os.path.join(models_dir_path, 'laptop.pt')
     laptop_model = YOLO(laptop_model_path)
 
@@ -271,14 +271,13 @@ def segment_with_sahi(original_img, num_blocks, model, gui_handler):
     #     cv.imshow('defects', d.image)
     #     cv.waitKey()
     #     cv.destroyAllWindows()
-    gui_handler.display_signal.emit(original_img)
 
     # cv.imshow('detected image', original_img)
     # cv.waitKey(1)
     # time.sleep(10)
     # cv.destroyAllWindows()
     detected_img = laptop_region_img
-    # detected_img = draw_multiple_rectangles(laptop_region_img)
+    detected_img = draw_multiple_rectangles(laptop_region_img)
     # if scratch_count == 0 or stain_count == 0:
     #     detected_img = draw_multiple_rectangles(original_img)
     # else:

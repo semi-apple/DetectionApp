@@ -17,7 +17,6 @@ from reportlab.pdfgen import canvas
 from reportlab.lib.utils import ImageReader
 from PIL import Image
 import numpy as np
-from interfaces.classes import GUIHandler
 
 _widget_dir = os.path.dirname(os.path.abspath(__file__))
 
@@ -138,7 +137,6 @@ class VideoBase(QObject):
         self.buttons['capture_button'].clicked.connect(self.capture_images)
         # self.buttons['capture_button'].clicked.connect(self.capture_selected_images)
         self.buttons['stop_button'].clicked.connect(self.stop_detection)
-        self.gui_handler = GUIHandler()
 
     def init_models(self, models):
         self.top_bottom_model = models['top_bottom']
@@ -226,7 +224,7 @@ class VideoBase(QObject):
             # if camera_port == 2:
             #     detected_img, defects_counts = detect_keyboard(img, models_list[camera_port])
             # else:
-            detected_img, defects_counts, defects = segment_with_sahi(img, 2, models_list[camera_port - 1], self.gui_handler)
+            detected_img, defects_counts, defects = segment_with_sahi(img, 2, models_list[camera_port - 1])
             if defects_counts is not None:
                 detected_info.append((defects_counts, camera_port))
             if defects is not None:
