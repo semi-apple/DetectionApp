@@ -4,7 +4,7 @@ Description: create a window widget to present camera information.
 Author: Kun
 Last Modified: 03 Jul 2024
 """
-from PyQt5.QtCore import QObject, pyqtSlot, Qt, pyqtSignal, QThread
+from PyQt5.QtCore import QObject, pyqtSlot, Qt, pyqtSignal, QThread, QEventLoop
 from PyQt5.QtGui import QImage, QPixmap
 from PyQt5.QtWidgets import QFileDialog
 # from exceptions.detection_exceptions import DetectionException
@@ -17,6 +17,9 @@ from reportlab.pdfgen import canvas
 from reportlab.lib.utils import ImageReader
 from PIL import Image
 import numpy as np
+import asyncio
+from asyncio import events
+from concurrent.futures import ThreadPoolExecutor
 
 _widget_dir = os.path.dirname(os.path.abspath(__file__))
 
@@ -134,9 +137,12 @@ class VideoBase(QObject):
         self.imgs = []
 
         self.buttons['detect_button'].clicked.connect(self.start_detection)
-        self.buttons['capture_button'].clicked.connect(self.capture_images)
+        self.buttons['capture_button'].clicked.connect(self.capture_images_button_clicked)
+        # self.buttons['capture_button'].clicked.connect(self.capture_images)
         # self.buttons['capture_button'].clicked.connect(self.capture_selected_images)
         self.buttons['stop_button'].clicked.connect(self.stop_detection)
+        
+        self.executor = ThreadPoolExecutor()
 
     def init_models(self, models):
         self.top_bottom_model = models['top_bottom']
@@ -163,7 +169,13 @@ class VideoBase(QObject):
         # ------------------------------------------------------------------------------ #
         # self.select_images()
 
-    def detect_images(self, original_imgs: list) -> object:
+    def capture_images_button_clicked(self):
+        loop = events.new_event_loop()
+        events.set_event_loop(loop)
+        loop.run_until_complete(self.capture_images())
+        loop.close()
+
+    async def detect_images(self, original_imgs: list) -> object:
         """
         Performs detection on the captured images.
 
@@ -173,6 +185,7 @@ class VideoBase(QObject):
         Returns:
             tuple: Detected images, features, and defect lists.
         """
+        loop = asyncio.get_event_loop()
         logo, lot, serial = '', '', ''
         detected_imgs = []
         detected_features = {}
@@ -227,7 +240,11 @@ class VideoBase(QObject):
             # if camera_port == 2:
             #     detected_img, defects_counts = detect_keyboard(img, models_list[camera_port])
             # else:
-            detected_img, defects_counts, defects = segment_with_sahi(img, 2, models_list[camera_port - 1])
+            detected_img, defects_counts, defects = await loop.run_in_executor(
+                self.executor,
+                lambda: segment_with_sahi(img, 2, models_list[camera_port - 1])
+            ) 
+            # segment_with_sahi(img, 2, models_list[camera_port - 1])
             if defects_counts is not None:
                 detected_info.append((defects_counts, camera_port))
             if defects is not None:
@@ -237,7 +254,7 @@ class VideoBase(QObject):
         detected_features['detected_info'] = detected_info
         return detected_imgs, detected_features, defects_list
 
-    def capture_images(self):
+    async def capture_images(self):
         original_imgs = []
 
         # set default logo capture camera as 0
@@ -271,8 +288,10 @@ class VideoBase(QObject):
              
             One bad thing is that it is not automatic.
         """
-
-        detected_imgs, detected_features, defects_list = self.detect_images([np.copy(imgs), port] for imgs, port in original_imgs)
+        detected_imgs, detected_features, defects_list = await self.detect_images(
+                [(np.copy(img), port) for img, port in original_imgs]
+            )
+        # detected_imgs, detected_features, defects_list = self.detect_images([np.copy(imgs), port] for imgs, port in original_imgs)
         lot = detected_features['lot']
 
         # self.save_raw_info(folder_name='original', imgs=original_imgs)

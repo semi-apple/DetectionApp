@@ -466,9 +466,9 @@ def detect_serial(img, ser_region_model, ser_model):
 
 
 def draw_multiple_rectangles(image):
-    img_path = r'C:\Users\Kun\Desktop\demo\20240919125037_top.jpg'
+    # img_path = r'C:\Users\Kun\Desktop\demo\20240919125037_top.jpg'
     # img_path = '/Users/kunzhou/Desktop/demo/20240919121824_top.jpg'
-    img = cv.imread(img_path)
+    # img = cv.imread(img_path)
     drawing = False
     start_point = (-1, -1)
     rectangles = []
