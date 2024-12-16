@@ -181,12 +181,8 @@ class VideoBase(QObject):
         defects_list = []
         models_list = [self.top_bottom_model, self.top_bottom_model, self.keyboard_model, self.screen_model]
         for img, camera_port in original_imgs:
-            # camera_port += 1
             if img is None:
                 continue
-            # cv.imshow(f"image", img)
-            # cv.waitKey()
-            # cv.destroyAllWindows()
             print(f"detect_images running in thread: {threading.current_thread().name}")
             if camera_port == 1:  # detect logo and lot number
                 logo, lot, asset = None, None, None  # Initialize variables
@@ -207,10 +203,6 @@ class VideoBase(QObject):
                 except AssetNumberNotFoundException as e:
                     print(f'On port {camera_port} -> {e}')
                     asset = 'Asset_Not_Found'
-                
-                detected_features['logo'], detected_features['lot'], detected_features['asset'] = \
-                    logo, lot, asset
-                print(f'Logo: {logo}, Lot Number: {lot}')
 
             if camera_port == 2:  # detect serial number
                 try:
@@ -221,12 +213,6 @@ class VideoBase(QObject):
                     print(f'On port {camera_port} -> {e}')
                     serial = 'Serial_Not_Found'
 
-                finally:
-                    detected_features['serial'] = serial
-
-            # if camera_port == 2:
-            #     detected_img, defects_counts = detect_keyboard(img, models_list[camera_port])
-            # else:
             detected_img, defects_counts, defects = segment_with_sahi(img, 2, models_list[camera_port - 1])
             if defects_counts is not None:
                 detected_info.append((defects_counts, camera_port))
@@ -234,6 +220,8 @@ class VideoBase(QObject):
                 defects_list.append((defects, camera_port))
             detected_imgs.append((np.copy(detected_img), camera_port))
 
+        detected_features['serial'], detected_features['logo'], detected_features['lot'], detected_features['asset'] = \
+            serial, logo, lot, asset
         detected_features['detected_info'] = detected_info
         return detected_imgs, detected_features, defects_list
 
@@ -275,9 +263,9 @@ class VideoBase(QObject):
         detected_imgs, detected_features, defects_list = self.detect_images([np.copy(imgs), port] for imgs, port in original_imgs)
         lot = detected_features['lot']
 
-        # self.save_raw_info(folder_name='original', imgs=original_imgs)
-        # # cv_folder = lot + '_cv'
-        # self.save_raw_info(folder_name='detected', imgs=detected_imgs)
+        self.save_raw_info(folder_name='original', imgs=original_imgs)
+        # cv_folder = lot + '_cv'
+        self.save_raw_info(folder_name='detected', imgs=detected_imgs)
         save_to_pdf(detected_imgs, defects_list, lot)
         self.laptop_info.emit(detected_features)
 
