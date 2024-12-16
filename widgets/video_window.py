@@ -196,7 +196,7 @@ class VideoBase(QObject):
         for img, camera_port in original_imgs:
             if img is None:
                 continue
-            print(f"detect_images running in thread: {threading.current_thread().name}")
+            # print(f"detect_images running in thread: {threading.current_thread().name}")
             if camera_port == 1:  # detect logo and lot number
                 logo, lot, asset = None, None, None  # Initialize variables
                 # Detect logo
@@ -224,31 +224,22 @@ class VideoBase(QObject):
 
                 except SerialNumberNotFoundException as e:
                     print(f'On port {camera_port} -> {e}')
-                    serial = 'Serial_Not_Found'
+                    serial = 'Serial_Not_Found'                    
 
-<<<<<<< HEAD
-            detected_img, defects_counts, defects = segment_with_sahi(img, 2, models_list[camera_port - 1])
-=======
-                finally:
-                    detected_features['serial'] = serial
-
-            # if camera_port == 2:
-            #     detected_img, defects_counts = detect_keyboard(img, models_list[camera_port])
-            # else:
             detected_img, defects_counts, defects = await loop.run_in_executor(
                 self.executor,
                 lambda: segment_with_sahi(img, 2, models_list[camera_port - 1])
             ) 
-            # segment_with_sahi(img, 2, models_list[camera_port - 1])
->>>>>>> 1998b4aa020aed9c4aa253871e47996ca1d250e1
             if defects_counts is not None:
                 detected_info.append((defects_counts, camera_port))
             if defects is not None:
                 defects_list.append((defects, camera_port))
             detected_imgs.append((np.copy(detected_img), camera_port))
 
+
         detected_features['serial'], detected_features['logo'], detected_features['lot'], detected_features['asset'] = \
             serial, logo, lot, asset
+        print(f'Logo: {logo}, Lot Number: {lot}')
         detected_features['detected_info'] = detected_info
         return detected_imgs, detected_features, defects_list
 
