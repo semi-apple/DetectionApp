@@ -7,9 +7,10 @@ Last Modified: 17 Dec 2024
 from PyQt5.QtCore import QThread, pyqtSignal
 import numpy as np
 from PyQt5.QtCore import pyqtSignal, QThread
-from interfaces.detection_functions import detect_lot_asset_barcode, segment_with_sahi, detect_logo
+from interfaces.detection_functions import detect_lot_asset_barcode, segment_with_sahi, detect_logo, detect_serial
 from exceptions.detection_exceptions import (LotNumberNotFoundException, AssetNumberNotFoundException, 
-                                             LogoNotFoundException, SerialNumberNotFoundException)
+                                             LogoNotFoundException, SerialNumberNotFoundException, 
+                                             LaptopNotDetectedException, DetectionException)
 
 
 class DetectionThread(QThread):
@@ -91,7 +92,15 @@ class DetectionThread(QThread):
                     print(f'On port {camera_port} -> {e}')
                     serial = 'Serial_Not_Found'                    
 
-            detected_img, defects_counts, defects = segment_with_sahi(img, 2, models_list[camera_port - 1]) 
+            try:
+                detected_img, defects_counts, defects = segment_with_sahi(img, 2, models_list[camera_port - 1])
+            except LaptopNotDetectedException as e: 
+                print(f'On port {camera_port} -> {e}')
+                defects_counts, defects, detected_img = None, None, None
+            except DetectionException as e:
+                print(f'On port {camera_port} -> {e}')
+                defects_counts, defects, detected_img = None, None, None
+                
             if defects_counts is not None:
                 detected_info.append((defects_counts, camera_port))
             if defects is not None:

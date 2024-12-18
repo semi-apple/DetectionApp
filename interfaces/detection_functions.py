@@ -22,7 +22,8 @@ import random
 import pytesseract
 from exceptions.detection_exceptions import (LotNumberNotFoundException, LogoNotFoundException,
                                              SerialNumberNotFoundException, BarcodeNotFoundException, 
-                                             AssetNumberNotFoundException)
+                                             AssetNumberNotFoundException, LaptopNotDetectedException,
+                                             DetectionException)
 
 pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
 
@@ -191,10 +192,10 @@ def detect_keyboard(original_img, model):
 def segment_with_sahi(original_img, num_blocks, model):
     laptop_model_path = os.path.join(models_dir_path, 'laptop.pt')
     laptop_model = YOLO(laptop_model_path)
-
     region_results = laptop_model(original_img)
-
     region_xyxy_list = region_results[0].boxes.xyxy.tolist()[0]
+    if not region_results[0].boxes:
+        raise LaptopNotDetectedException()
 
     rx1, ry1, rx2, ry2 = map(int, region_xyxy_list)
     laptop_region_img = original_img[ry1: ry2, rx1: rx2]
@@ -211,15 +212,20 @@ def segment_with_sahi(original_img, num_blocks, model):
     # h = original_img.shape[0]
     # w = original_img.shape[1]
     W = num_blocks - 0.2 * (num_blocks - 1)
-    results = get_sliced_prediction(
-        laptop_region_img,
-        # original_img,
-        detection_model_seg,
-        slice_height=int(h / W),
-        slice_width=int(w / W),
-        overlap_width_ratio=0.2,
-        overlap_height_ratio=0.2,
-    )
+    try:
+        results = get_sliced_prediction(
+            laptop_region_img,
+            # original_img,
+            detection_model_seg,
+            slice_height=int(h / W),
+            slice_width=int(w / W),
+            overlap_width_ratio=0.2,
+            overlap_height_ratio=0.2,
+        )
+    except ValueError as ve:
+        raise DetectionException("Value Error.", original_exception=ve)
+    except Exception as e:
+        raise DetectionException("An unexpected error occurred during segmentation.", original_exception=e)
     classes = list(model.names.values())
     classes_ids = [classes.index(cls) for cls in classes]
 

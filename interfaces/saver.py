@@ -61,7 +61,7 @@ def save_to_pdf(detected_imgs: list[tuple], defects_list: list[tuple[list[Defect
                 c.showPage()
                 y_position = height - 50
             # title 
-            c.drawString(50, y_position, f'Surface: {TRANSFER[port]}')
+            c.drawString(50, y_position, f'Surface: {TRANSFER[port - 1]}')
             y_position -= 20
             # image
             c.drawImage(detected_img_reader, 50, y_position - display_height, width=display_width, height=display_height)

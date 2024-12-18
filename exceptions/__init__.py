@@ -4,6 +4,7 @@ from .detection_exceptions import (
     SerialNumberNotFoundException,
     BarcodeNotFoundException,
     DetectionException,
+    LaptopNotDetectedException,
 )
 
 from .user_login_exception import (
@@ -24,4 +25,5 @@ __all__ = (
     'CameraInitException',
     'BarcodeNotFoundException',
     'DetectionException',
+    'LaptopNotDetectedException',
 )

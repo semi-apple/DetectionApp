@@ -75,14 +75,14 @@ class VideoBase(QObject):
                 original_img = thread.capture()  # original image
                 original_imgs.append((np.copy(original_img), thread.camera_port))
                 
-        self.save_raw_info(folder_name='original', imgs=original_imgs)
+        # self.save_raw_info(folder_name='original', imgs=original_imgs)
         self.detection.add_images([(np.copy(img), port) for img, port in original_imgs])
     
     @pyqtSlot(tuple)
     def process_info(self, detected_info):
         detected_imgs, detected_features, defects_list = detected_info
         lot = detected_features['lot']
-        self.save_raw_info(folder_name='detected', imgs=detected_imgs)
+        # self.save_raw_info(folder_name='detected', imgs=detected_imgs)
         save_to_pdf(detected_imgs, defects_list, lot)
         self.laptop_info.emit(detected_features)
 

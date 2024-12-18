@@ -97,16 +97,35 @@ class LogoNotFoundException(Exception):
 
 class DetectionException(Exception):
     """
-    Exception raised for error while detecting
+    Exception raised when a detection error occurs.
+
+    Attributes:
+        message -- explanation of the error
+        original_exception -- optional: original exception that caused the detection failure
+    """
+    def __init__(self, message="Detection Error.", original_exception=None):
+        self.message = message
+        self.original_exception = original_exception
+        super().__init__(self.message)
+
+    def __str__(self):
+        if self.original_exception:
+            return f"{self.message} -- Caused by: {repr(self.original_exception)})"
+        return self.message
+    
+
+class LaptopNotDetectedException(Exception):
+    """
+    Exception raised when laptop is not detected
 
     Attributes:
         username -- thread that causes error.
         message -- explanation of the error.
     """
-
-    def __init__(self, message='Detection Error.'):
+    def __init__(self, message='Laptop Not Detected.'):
         self.message = message
         super().__init__(self.message)
 
     def __str__(self):
         return f'{self.message}'
+    
