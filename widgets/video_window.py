@@ -36,22 +36,22 @@ class VideoBase(QObject):
         self.threads = []
         self.thread_labels = thread_labels
         self.buttons = buttons
-        self.detection = DetectionThread(models)
-        qThread = QThread()
-        self.detection.moveToThread(qThread)
-        self.detection.start()
+        self.models = models
         self.image_saver = ImageSaver()
         self.imgs = []
-
+        self.detection, self.detectionThread = None, None
         self.buttons['detect_button'].clicked.connect(self.start_detection)
         self.buttons['capture_button'].clicked.connect(self.capture_images)
         # self.buttons['capture_button'].clicked.connect(self.capture_images)
         # self.buttons['capture_button'].clicked.connect(self.capture_selected_images)
-        self.buttons['stop_button'].clicked.connect(self.stop_detection)
-        self.detection.detected_info.connect(self.process_info)
-        
+        self.buttons['stop_button'].clicked.connect(self.stop_detection)        
 
     def start_detection(self):
+        self.detection = DetectionThread(self.models)
+        self.detection.detected_info.connect(self.process_info)
+        self.detectionThread = QThread()
+        self.detection.moveToThread(self.detectionThread)
+        self.detection.start()
         for i in range(1, 7):
             thread = VideoThread(i)
             
@@ -92,8 +92,13 @@ class VideoBase(QObject):
             qThread.quit()
             qThread.wait()
         self.threads = []
-        self.detection.running = False
-        self.detection.stop()
+        if self.detection is not None:
+            self.detection.running = False
+            self.detection.stop()
+            self.detection = None
+            self.detectionThread.quit()
+            self.detectionThread.wait()
+            self.detectionThread = None
         # time.sleep(1)
         for label in self.thread_labels:
             label.clear()
